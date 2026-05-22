@@ -1,0 +1,252 @@
+import { useState } from "react";
+import { Button } from "@/presentation/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/presentation/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/presentation/components/ui/alert-dialog";
+import { Skeleton } from "@/presentation/components/ui/skeleton";
+import { Badge } from "@/presentation/components/ui/badge";
+import { useFilteredTasks, useCreateTask, useDeleteTask, useChangeTaskStatus, useChangeTaskPriority } from "@/application/hooks/useTasks";
+import { useAuthStore } from "@/application/store/auth.store";
+import { TaskStatusBadge } from "./TaskStatusBadge";
+import { TaskPriorityBadge } from "./TaskPriorityBadge";
+import { TaskForm } from "./TaskForm";
+import { useQuery } from "@tanstack/react-query";
+import { projectsApi } from "@/infrastructure/api/projects.api";
+import { TaskStatus, TaskPriority } from "@/domain/types";
+import { Plus, Trash2, Edit, ClipboardList } from "lucide-react";
+import { toast } from "sonner";
+
+interface TaskListProps {
+  projectId: number;
+  isOwner: boolean;
+  isArchived: boolean;
+}
+
+export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
+  const userId = useAuthStore((s) => s.user?.id);
+  const [statusFilter, setStatusFilter] = useState<TaskStatus | "">("");
+  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "">("");
+  const { tasks, isLoading, isError } = useFilteredTasks(projectId, statusFilter, priorityFilter);
+  const createMutation = useCreateTask(projectId);
+  const deleteMutation = useDeleteTask(projectId);
+  const changeStatusMutation = useChangeTaskStatus(projectId);
+  const changePriorityMutation = useChangeTaskPriority(projectId);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
+  const [editingTask, setEditingTask] = useState<number | null>(null);
+
+  const { data: projectFull } = useQuery({
+    queryKey: ["projects", projectId],
+    queryFn: () => projectsApi.getById(projectId),
+    enabled: !!projectId,
+  });
+
+  const members = (projectFull?.member_ids || []).map((id) => ({
+    user_id: id,
+    user_email: `User #${id}`,
+  }));
+
+  // In a real app, you'd fetch member details to get emails. For now use IDs.
+
+  const handleCreate = (data: { name: string; priority?: TaskPriority; assigned_user_id?: number | null }) => {
+    createMutation.mutate(data, {
+      onSuccess: () => setCreateOpen(false),
+    });
+  };
+
+  const handleDelete = (taskId: number) => {
+    deleteMutation.mutate(taskId, {
+      onSuccess: () => setDeleteTaskId(null),
+    });
+  };
+
+  const canEdit = (assignedUserId: number | null) => {
+    if (isOwner) return true;
+    return assignedUserId === userId;
+  };
+
+  const clearFilters = () => {
+    setStatusFilter("");
+    setPriorityFilter("");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-20 w-full" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-destructive">Error al cargar tareas</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex gap-2">
+          <select
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm cursor-pointer"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "")}
+          >
+            <option value="">Todos los estados</option>
+            <option value={TaskStatus.PENDING}>Pendiente</option>
+            <option value={TaskStatus.IN_PROGRESS}>En Progreso</option>
+            <option value={TaskStatus.COMPLETED}>Completada</option>
+          </select>
+          <select
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm cursor-pointer"
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | "")}
+          >
+            <option value="">Todas las prioridades</option>
+            <option value={TaskPriority.LOW}>Baja</option>
+            <option value={TaskPriority.MEDIUM}>Media</option>
+            <option value={TaskPriority.HIGH}>Alta</option>
+          </select>
+          {(statusFilter || priorityFilter) && (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>Limpiar</Button>
+          )}
+        </div>
+        {!isArchived && (
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="mr-2 h-4 w-4" /> Agregar Tarea
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Crear Tarea</DialogTitle>
+              </DialogHeader>
+              <TaskForm
+                members={members}
+                onSubmit={handleCreate}
+                isPending={createMutation.isPending}
+                mode="create"
+                onCancel={() => setCreateOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
+      {!isArchived && tasks.length > 0 && (
+        <p className="text-xs text-muted-foreground">Consejo: Haz clic en la insignia de estado o prioridad para cambiarla</p>
+      )}
+
+      {tasks.length === 0 ? (
+        <div className="text-center py-12 border rounded-lg">
+          <ClipboardList className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h3 className="mt-4 text-lg font-semibold">
+            {statusFilter || priorityFilter ? "Sin tareas que coincidan" : "Sin tareas aún"}
+          </h3>
+          <p className="text-muted-foreground mt-2">
+            {statusFilter || priorityFilter
+              ? "Prueba ajustando los filtros"
+              : "Crea tu primera tarea para comenzar."}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {tasks.map((task) => (
+            <div
+              key={task.id}
+              className={`flex items-center justify-between gap-4 rounded-lg border p-4 ${isArchived ? "opacity-75" : ""}`}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium truncate">{task.name}</span>
+                  <TaskStatusBadge status={task.status} />
+                  <TaskPriorityBadge priority={task.priority} />
+                </div>
+                {task.assigned_user_id && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Asignada a Usuario #{task.assigned_user_id}
+                  </p>
+                )}
+                {!isArchived && (
+                  <div className="flex gap-2 mt-2">
+                    <select
+                      className="h-7 text-xs rounded border border-input bg-background px-2 cursor-pointer"
+                      value={task.status}
+                      onChange={(e) =>
+                        changeStatusMutation.mutate({
+                          taskId: task.id,
+                          payload: { status: e.target.value as TaskStatus },
+                        })
+                      }
+                    >
+                      <option value={TaskStatus.PENDING}>Pendiente</option>
+                      <option value={TaskStatus.IN_PROGRESS}>En Progreso</option>
+                      <option value={TaskStatus.COMPLETED}>Completada</option>
+                    </select>
+                    <select
+                      className="h-7 text-xs rounded border border-input bg-background px-2 cursor-pointer"
+                      value={task.priority}
+                      onChange={(e) =>
+                        changePriorityMutation.mutate({
+                          taskId: task.id,
+                          payload: { priority: e.target.value as TaskPriority },
+                        })
+                      }
+                    >
+                      <option value={TaskPriority.LOW}>Baja</option>
+                      <option value={TaskPriority.MEDIUM}>Media</option>
+                      <option value={TaskPriority.HIGH}>Alta</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+              {!isArchived && canEdit(task.assigned_user_id) && (
+                <div className="flex gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setDeleteTaskId(task.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <AlertDialog open={deleteTaskId !== null} onOpenChange={(open) => !open && setDeleteTaskId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar tarea?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. La tarea será eliminada permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTaskId && handleDelete(deleteTaskId)}
+              className="bg-destructive text-destructive-foreground"
+            >
+              {deleteMutation.isPending ? "Eliminando..." : "Eliminar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
