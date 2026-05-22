@@ -38,6 +38,9 @@ dist/
 .docker/
 
 
+# ── Documents ──────────────────────────────────
+TEST TECNICO INGENIUS.docx
+
 # ── Editors / OS ──────────────────────────────
 
 .DS_Store
