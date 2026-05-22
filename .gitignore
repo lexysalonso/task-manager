@@ -1,0 +1,51 @@
+# .env.example is intentionally NOT ignored — it is safe to commit.
+
+
+# ── Python ────────────────────────────────────
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+alembic/versions/*.pyc
+
+
+# ── Node / React / Vite ───────────────────────
+
+node_modules/
+dist/
+.vite/
+*.local
+.env
+.env.local
+.env.*.local
+
+
+# ── Docker ────────────────────────────────────
+
+.docker/
+
+
+# ── Editors / OS ──────────────────────────────
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.user
+*.swp
+*.swo
+*~
