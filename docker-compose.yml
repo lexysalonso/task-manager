@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # ── Database ────────────────────────────────────
   # PostgreSQL with healthcheck so the API never starts before the DB is ready.

@@ -6,8 +6,10 @@ A full-stack task management system where users can register, log in, create pro
 
 ## Quick Start (Docker)
 
+**Prerequisite:** [Docker](https://docs.docker.com/engine/install/) + [Docker Compose](https://docs.docker.com/compose/install/) (v2).
+
 ```bash
-git clone https://github.com/your-username/task-manager.git
+git clone https://github.com/lexysalonso/task-manager.git
 cd task-manager
 cp .env.example .env
 docker compose up --build
@@ -19,6 +21,7 @@ No need to install Python, Node.js, or PostgreSQL locally. Docker handles everyt
 |------------|----------------------------------|
 | Frontend   | http://localhost:5173            |
 | API        | http://localhost:8000            |
+| Health     | http://localhost:8000/api/v1/health |
 | Swagger UI | http://localhost:8000/docs       |
 | ReDoc      | http://localhost:8000/redoc      |
 
@@ -163,9 +166,9 @@ uvicorn src.main:app --reload
 
 ```bash
 cd task-manager-frontend
-npm install
+corepack enable && pnpm install
 cp ../.env.example .env.local
-npm run dev
+pnpm dev
 ```
 
 ---
@@ -194,7 +197,7 @@ Full interactive documentation is available at http://localhost:8000/docs (Swagg
 POST   /auth/register                        Register a new user
 POST   /auth/login                           Authenticate and get JWT
 
-GET    /health                               Health check
+GET    /api/v1/health                         Health check
 
 GET    /projects                             List user's projects
 POST   /projects                             Create a project
