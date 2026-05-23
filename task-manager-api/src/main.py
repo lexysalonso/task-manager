@@ -10,6 +10,7 @@ from src.infrastructure.db.database import engine
 from src.infrastructure.db.models.base import Base
 from src.presentation.api.v1.routers import (
     auth_router,
+    user_router,
     project_router,
     task_router,
     health_router,
@@ -70,6 +71,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(user_router, prefix="/api/v1")
 app.include_router(project_router, prefix="/api/v1")
 app.include_router(task_router, prefix="/api/v1")
 

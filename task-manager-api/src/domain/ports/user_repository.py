@@ -19,3 +19,7 @@ class UserRepository(ABC):
     @abstractmethod
     async def get_by_ids(self, user_ids: list[int]) -> list[User]:
         raise NotImplementedError
+
+    @abstractmethod
+    async def search(self, query: str, limit: int = 20) -> list[User]:
+        raise NotImplementedError

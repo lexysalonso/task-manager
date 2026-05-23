@@ -49,7 +49,9 @@ class SqlAlchemyTaskRepository(TaskRepository):
 
     async def list_by_project(self, project_id: int) -> list[Task]:
         result = await self._session.execute(
-            select(TaskModel).where(TaskModel.project_id == project_id)
+            select(TaskModel)
+            .where(TaskModel.project_id == project_id)
+            .order_by(TaskModel.created_at.desc())
         )
         models = result.scalars().all()
         return [

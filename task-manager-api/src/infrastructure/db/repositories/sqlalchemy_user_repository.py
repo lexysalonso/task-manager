@@ -51,3 +51,44 @@ class SqlAlchemyUserRepository(UserRepository):
             hashed_password=model.hashed_password,
             created_at=model.created_at,
         )
+
+    async def get_by_ids(self, user_ids: list[int]) -> list[User]:
+        if not user_ids:
+            return []
+        result = await self._session.execute(
+            select(UserModel).where(UserModel.id.in_(user_ids))
+        )
+        models = result.scalars().all()
+        id_map = {m.id: m for m in models}
+        return [
+            User(
+                id=m.id,
+                email=m.email,
+                full_name=m.full_name,
+                hashed_password=m.hashed_password,
+                created_at=m.created_at,
+            )
+            for uid in user_ids
+            if (m := id_map.get(uid))
+        ]
+
+    async def search(self, query: str, limit: int = 20) -> list[User]:
+        stmt = (
+            select(UserModel)
+            .where(
+                UserModel.email.ilike(f"%{query}%") | UserModel.full_name.ilike(f"%{query}%")
+            )
+            .limit(limit)
+        )
+        result = await self._session.execute(stmt)
+        models = result.scalars().all()
+        return [
+            User(
+                id=m.id,
+                email=m.email,
+                full_name=m.full_name,
+                hashed_password=m.hashed_password,
+                created_at=m.created_at,
+            )
+            for m in models
+        ]
