@@ -6,17 +6,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
 } from "@/presentation/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/presentation/components/ui/alert-dialog";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { Badge } from "@/presentation/components/ui/badge";
-import { useFilteredTasks, useCreateTask, useUpdateTask, useDeleteTask, useChangeTaskStatus, useChangeTaskPriority } from "@/application/hooks/useTasks";
+import { useFilteredTasks, useCreateTask, useUpdateTask, useDeleteTask, useChangeTaskStatus, useChangeTaskPriority } from "@/application/hooks/use-tasks";
 import { useAuthStore } from "@/application/store/auth.store";
 import { membersApi } from "@/infrastructure/api/members.api";
-import { TaskStatusBadge } from "./TaskStatusBadge";
-import { TaskPriorityBadge } from "./TaskPriorityBadge";
-import { TaskForm } from "./TaskForm";
+import { TaskStatusBadge } from "./task-status-badge";
+import { TaskPriorityBadge } from "./task-priority-badge";
+import { TaskForm } from "./task-form";
 import { TaskStatus, TaskPriority, type Task } from "@/domain/types";
 import { Plus, Trash2, Edit, ClipboardList } from "lucide-react";
 
@@ -138,6 +139,9 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Crear Tarea</DialogTitle>
+                <DialogDescription>
+                  Completa los campos para crear una nueva tarea.
+                </DialogDescription>
               </DialogHeader>
               <TaskForm
                 members={members}
@@ -247,6 +251,9 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Tarea</DialogTitle>
+            <DialogDescription>
+              Modifica los campos de la tarea.
+            </DialogDescription>
           </DialogHeader>
           {editTask && (
             <TaskForm

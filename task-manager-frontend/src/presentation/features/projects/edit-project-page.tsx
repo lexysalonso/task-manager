@@ -1,9 +1,9 @@
 import { useParams, useNavigate, Link, Navigate } from "react-router-dom";
 import { Button } from "@/presentation/components/ui/button";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
-import { useProject, useUpdateProject } from "@/application/hooks/useProjects";
+import { useProject, useUpdateProject } from "@/application/hooks/use-projects";
 import { useAuthStore } from "@/application/store/auth.store";
-import { ProjectForm } from "./ProjectForm";
+import { ProjectForm } from "./project-form";
 import { ArrowLeft } from "lucide-react";
 
 export function EditProjectPage() {

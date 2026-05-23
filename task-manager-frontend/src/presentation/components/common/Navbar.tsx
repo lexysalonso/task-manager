@@ -10,7 +10,7 @@ import {
 } from "@/presentation/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/presentation/components/ui/avatar";
 import { useAuthStore } from "@/application/store/auth.store";
-import { useLogout } from "@/application/hooks/useAuth";
+import { useLogout } from "@/application/hooks/use-auth";
 import { User } from "lucide-react";
 
 function decodeTokenPayload(token: string): Record<string, unknown> | null {

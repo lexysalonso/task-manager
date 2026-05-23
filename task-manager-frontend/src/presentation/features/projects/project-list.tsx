@@ -3,7 +3,7 @@ import { Button } from "@/presentation/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/presentation/components/ui/card";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
-import { useProjects } from "@/application/hooks/useProjects";
+import { useProjects } from "@/application/hooks/use-projects";
 import { useAuthStore } from "@/application/store/auth.store";
 import { Plus, Users, Archive } from "lucide-react";
 

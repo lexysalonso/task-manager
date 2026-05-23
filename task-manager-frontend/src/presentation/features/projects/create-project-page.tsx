@@ -1,7 +1,7 @@
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/presentation/components/ui/button";
-import { useCreateProject } from "@/application/hooks/useProjects";
-import { ProjectForm } from "./ProjectForm";
+import { useCreateProject } from "@/application/hooks/use-projects";
+import { ProjectForm } from "./project-form";
 import { ArrowLeft } from "lucide-react";
 
 export function CreateProjectPage() {

@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
 import { Label } from "@/presentation/components/ui/label";
-import { useRegister } from "@/application/hooks/useAuth";
+import { useRegister } from "@/application/hooks/use-auth";
 
 const registerSchema = z.object({
   email: z.string().email("Formato de correo inválido"),

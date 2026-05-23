@@ -6,9 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/presentation/compone
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/presentation/components/ui/alert-dialog";
 import { useAuthStore } from "@/application/store/auth.store";
-import { useProject, useDeleteProject, useUpdateProject } from "@/application/hooks/useProjects";
-import { TaskList } from "@/presentation/features/tasks/TaskList";
-import { MemberList } from "@/presentation/features/members/MemberList";
+import { useProject, useDeleteProject, useUpdateProject } from "@/application/hooks/use-projects";
+import { TaskList } from "@/presentation/features/tasks/task-list";
+import { MemberList } from "@/presentation/features/members/member-list";
 import { Edit, Trash2, Archive, ArrowLeft } from "lucide-react";
 
 export function ProjectDetail() {

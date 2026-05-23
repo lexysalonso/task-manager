@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/presentation/components/ui/button";
@@ -22,7 +22,7 @@ interface ProjectFormProps {
 }
 
 export function ProjectForm({ defaultValues, onSubmit, isPending, mode }: ProjectFormProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<ProjectFormData>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
     defaultValues: {
       name: defaultValues?.name || "",
@@ -51,15 +51,21 @@ export function ProjectForm({ defaultValues, onSubmit, isPending, mode }: Projec
       {mode === "edit" && (
         <div className="space-y-2">
           <Label htmlFor="is_archived">Estado</Label>
-          <select
-            id="is_archived"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-            defaultValue={defaultValues?.is_archived ? "archived" : "active"}
-            {...register("is_archived", { setValueAs: (v: string) => v === "archived" })}
-          >
-            <option value="active">Activo</option>
-            <option value="archived">Archivado</option>
-          </select>
+          <Controller
+            name="is_archived"
+            control={control}
+            render={({ field }) => (
+              <select
+                id="is_archived"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+                value={field.value ? "archived" : "active"}
+                onChange={(e) => field.onChange(e.target.value === "archived")}
+              >
+                <option value="active">Activo</option>
+                <option value="archived">Archivado</option>
+              </select>
+            )}
+          />
         </div>
       )}
       <Button type="submit" disabled={isPending}>

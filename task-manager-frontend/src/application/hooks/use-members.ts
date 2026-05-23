@@ -22,6 +22,7 @@ export function useAddMember(projectId: number) {
     mutationFn: (userId: number) => membersApi.add(projectId, { user_id: userId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["project-members", projectId] });
       toast.success("Miembro agregado");
     },
     onError: (error: AxiosError<ApiError>) => {
