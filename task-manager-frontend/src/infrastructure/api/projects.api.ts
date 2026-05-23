@@ -1,5 +1,5 @@
 import apiClient from "./client";
-import type { Project, AuthResponse } from "@/domain/types";
+import type { Project } from "@/domain/types";
 
 export interface CreateProjectPayload {
   name: string;

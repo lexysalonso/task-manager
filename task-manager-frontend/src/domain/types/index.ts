@@ -28,9 +28,9 @@ export interface Project {
 }
 
 export interface ProjectMember {
-  project_id: number;
   user_id: number;
-  user_email: string;
+  email: string;
+  full_name: string;
 }
 
 export interface Task {

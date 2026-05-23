@@ -1,11 +1,10 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, Navigate } from "react-router-dom";
 import { Button } from "@/presentation/components/ui/button";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { useProject, useUpdateProject } from "@/application/hooks/useProjects";
 import { useAuthStore } from "@/application/store/auth.store";
 import { ProjectForm } from "./ProjectForm";
 import { ArrowLeft } from "lucide-react";
-import { Navigate } from "react-router-dom";
 
 export function EditProjectPage() {
   const { id } = useParams<{ id: string }>();

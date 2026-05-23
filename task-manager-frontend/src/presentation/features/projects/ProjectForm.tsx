@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 const projectSchema = z.object({
   name: z.string().min(3, "El nombre debe tener al menos 3 caracteres").max(100, "El nombre es demasiado largo"),
   description: z.string().max(500, "La descripción es demasiado larga").optional().default(""),
+  is_archived: z.boolean().optional().default(false),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
@@ -23,7 +24,11 @@ interface ProjectFormProps {
 export function ProjectForm({ defaultValues, onSubmit, isPending, mode }: ProjectFormProps) {
   const { register, handleSubmit, formState: { errors } } = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
-    defaultValues: { name: defaultValues?.name || "", description: defaultValues?.description || "" },
+    defaultValues: {
+      name: defaultValues?.name || "",
+      description: defaultValues?.description || "",
+      is_archived: defaultValues?.is_archived ?? false,
+    },
   });
 
   return (
@@ -43,20 +48,14 @@ export function ProjectForm({ defaultValues, onSubmit, isPending, mode }: Projec
         />
         {errors.description && <p className="text-sm text-destructive">{errors.description.message}</p>}
       </div>
-      {mode === "edit" && defaultValues && (
+      {mode === "edit" && (
         <div className="space-y-2">
           <Label htmlFor="is_archived">Estado</Label>
           <select
             id="is_archived"
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-            defaultValue={defaultValues.is_archived ? "archived" : "active"}
-            onChange={(e) => {
-              const input = document.createElement("input");
-              input.name = "is_archived";
-              input.value = e.target.value === "archived" ? "true" : "false";
-              input.type = "hidden";
-              e.target.form?.appendChild(input);
-            }}
+            defaultValue={defaultValues?.is_archived ? "archived" : "active"}
+            {...register("is_archived", { setValueAs: (v: string) => v === "archived" })}
           >
             <option value="active">Activo</option>
             <option value="archived">Archivado</option>

@@ -1,20 +1,15 @@
 import apiClient from "./client";
+import type { ProjectMember } from "@/domain/types";
 
 export interface AddMemberPayload {
   user_id: number;
 }
 
-export interface MemberResponse {
-  project_id: number;
-  user_id: number;
-  user_email: string;
-}
-
-export interface MemberListResponse {
-  members: MemberResponse[];
-}
-
 export const membersApi = {
+  list: async (projectId: number): Promise<ProjectMember[]> => {
+    const { data } = await apiClient.get<ProjectMember[]>(`/projects/${projectId}/members`);
+    return data;
+  },
   add: async (projectId: number, payload: AddMemberPayload): Promise<void> => {
     await apiClient.post(`/projects/${projectId}/members`, payload);
   },

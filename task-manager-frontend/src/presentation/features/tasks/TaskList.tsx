@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/presentation/components/ui/button";
 import {
   Dialog,
@@ -10,16 +11,14 @@ import {
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/presentation/components/ui/alert-dialog";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { Badge } from "@/presentation/components/ui/badge";
-import { useFilteredTasks, useCreateTask, useDeleteTask, useChangeTaskStatus, useChangeTaskPriority } from "@/application/hooks/useTasks";
+import { useFilteredTasks, useCreateTask, useUpdateTask, useDeleteTask, useChangeTaskStatus, useChangeTaskPriority } from "@/application/hooks/useTasks";
 import { useAuthStore } from "@/application/store/auth.store";
+import { membersApi } from "@/infrastructure/api/members.api";
 import { TaskStatusBadge } from "./TaskStatusBadge";
 import { TaskPriorityBadge } from "./TaskPriorityBadge";
 import { TaskForm } from "./TaskForm";
-import { useQuery } from "@tanstack/react-query";
-import { projectsApi } from "@/infrastructure/api/projects.api";
-import { TaskStatus, TaskPriority } from "@/domain/types";
+import { TaskStatus, TaskPriority, type Task } from "@/domain/types";
 import { Plus, Trash2, Edit, ClipboardList } from "lucide-react";
-import { toast } from "sonner";
 
 interface TaskListProps {
   projectId: number;
@@ -33,30 +32,32 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
   const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "">("");
   const { tasks, isLoading, isError } = useFilteredTasks(projectId, statusFilter, priorityFilter);
   const createMutation = useCreateTask(projectId);
+  const updateMutation = useUpdateTask(projectId);
   const deleteMutation = useDeleteTask(projectId);
   const changeStatusMutation = useChangeTaskStatus(projectId);
   const changePriorityMutation = useChangeTaskPriority(projectId);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
-  const [editingTask, setEditingTask] = useState<number | null>(null);
 
-  const { data: projectFull } = useQuery({
-    queryKey: ["projects", projectId],
-    queryFn: () => projectsApi.getById(projectId),
+  const { data: members = [] } = useQuery({
+    queryKey: ["project-members", projectId],
+    queryFn: () => membersApi.list(projectId),
     enabled: !!projectId,
   });
-
-  const members = (projectFull?.member_ids || []).map((id) => ({
-    user_id: id,
-    user_email: `User #${id}`,
-  }));
-
-  // In a real app, you'd fetch member details to get emails. For now use IDs.
 
   const handleCreate = (data: { name: string; priority?: TaskPriority; assigned_user_id?: number | null }) => {
     createMutation.mutate(data, {
       onSuccess: () => setCreateOpen(false),
     });
+  };
+
+  const handleUpdate = (data: { name: string; priority?: TaskPriority; assigned_user_id?: number | null }) => {
+    if (!editTask) return;
+    updateMutation.mutate(
+      { taskId: editTask.id, payload: data },
+      { onSuccess: () => setEditTask(null) },
+    );
   };
 
   const handleDelete = (taskId: number) => {
@@ -68,6 +69,12 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
   const canEdit = (assignedUserId: number | null) => {
     if (isOwner) return true;
     return assignedUserId === userId;
+  };
+
+  const getMemberName = (assignedUserId: number | null) => {
+    if (!assignedUserId) return "";
+    const member = members.find((m) => m.user_id === assignedUserId);
+    return member ? member.full_name || member.email : `Usuario #${assignedUserId}`;
   };
 
   const clearFilters = () => {
@@ -175,10 +182,10 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
                 </div>
                 {task.assigned_user_id && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Asignada a Usuario #{task.assigned_user_id}
+                    Asignada a {getMemberName(task.assigned_user_id)}
                   </p>
                 )}
-                {!isArchived && (
+                {!isArchived && canEdit(task.assigned_user_id) && (
                   <div className="flex gap-2 mt-2">
                     <select
                       className="h-7 text-xs rounded border border-input bg-background px-2 cursor-pointer"
@@ -217,6 +224,14 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
+                    onClick={() => setEditTask(task)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
                     onClick={() => setDeleteTaskId(task.id)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
@@ -227,6 +242,28 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
           ))}
         </div>
       )}
+
+      <Dialog open={editTask !== null} onOpenChange={(open) => !open && setEditTask(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Tarea</DialogTitle>
+          </DialogHeader>
+          {editTask && (
+            <TaskForm
+              members={members}
+              defaultValues={{
+                name: editTask.name,
+                priority: editTask.priority,
+                assigned_user_id: editTask.assigned_user_id,
+              }}
+              onSubmit={handleUpdate}
+              isPending={updateMutation.isPending}
+              mode="edit"
+              onCancel={() => setEditTask(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteTaskId !== null} onOpenChange={(open) => !open && setDeleteTaskId(null)}>
         <AlertDialogContent>

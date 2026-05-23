@@ -4,14 +4,7 @@ import { z } from "zod";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
 import { Label } from "@/presentation/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/presentation/components/ui/select";
-import { TaskPriority, TaskStatus } from "@/domain/types";
+import { TaskPriority, type ProjectMember } from "@/domain/types";
 import { Loader2 } from "lucide-react";
 
 const taskSchema = z.object({
@@ -22,13 +15,8 @@ const taskSchema = z.object({
 
 type TaskFormData = z.infer<typeof taskSchema>;
 
-interface MemberOption {
-  user_id: number;
-  user_email: string;
-}
-
 interface TaskFormProps {
-  members: MemberOption[];
+  members: ProjectMember[];
   defaultValues?: { name?: string; priority?: TaskPriority; assigned_user_id?: number | null };
   onSubmit: (data: { name: string; priority?: TaskPriority; assigned_user_id?: number | null }) => void;
   isPending: boolean;
@@ -76,7 +64,7 @@ export function TaskForm({ members, defaultValues, onSubmit, isPending, mode, on
         >
           <option value="">Sin asignar</option>
           {members.map((m) => (
-            <option key={m.user_id} value={m.user_id}>{m.user_email}</option>
+            <option key={m.user_id} value={m.user_id}>{m.full_name || m.email}</option>
           ))}
         </select>
       </div>

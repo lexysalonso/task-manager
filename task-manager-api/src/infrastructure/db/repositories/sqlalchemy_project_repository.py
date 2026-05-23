@@ -104,14 +104,14 @@ class SqlAlchemyProjectRepository(ProjectRepository):
 
     async def get_members(self, project_id: int) -> list[ProjectMember]:
         result = await self._session.execute(
-            select(ProjectMemberModel, UserModel.email)
+            select(ProjectMemberModel, UserModel.email, UserModel.full_name)
             .join(UserModel, ProjectMemberModel.user_id == UserModel.id)
             .where(ProjectMemberModel.project_id == project_id)
         )
         rows = result.all()
         return [
-            ProjectMember(project_id=pm.project_id, user_id=pm.user_id, user_email=email)
-            for pm, email in rows
+            ProjectMember(project_id=pm.project_id, user_id=pm.user_id, user_email=email, full_name=full_name)
+            for pm, email, full_name in rows
         ]
 
     async def is_member(self, project_id: int, user_id: int) -> bool:

@@ -46,6 +46,12 @@ class AddMemberRequest(BaseModel):
     user_id: int
 
 
+class MemberResponse(BaseModel):
+    user_id: int
+    email: str
+    full_name: str
+
+
 class ProjectResponse(BaseModel):
     id: int
     name: str

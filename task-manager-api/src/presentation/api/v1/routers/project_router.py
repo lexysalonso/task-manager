@@ -4,11 +4,13 @@ from src.presentation.api.v1.schemas.project_schemas import (
     CreateProjectRequest,
     UpdateProjectRequest,
     AddMemberRequest,
+    MemberResponse,
     ProjectResponse,
     ProjectListResponse,
 )
 from src.presentation.api.v1.dependencies import (
     get_current_user_id,
+    get_project_repo,
     get_create_project_use_case,
     get_get_project_use_case,
     get_list_projects_use_case,
@@ -27,6 +29,7 @@ from src.application.use_cases.projects import (
     RemoveMemberUseCase,
 )
 from src.application.dtos.project_dtos import CreateProjectInput, UpdateProjectInput
+from src.infrastructure.db.repositories import SqlAlchemyProjectRepository
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
 
@@ -154,6 +157,31 @@ async def delete_project(
     use_case: DeleteProjectUseCase = Depends(get_delete_project_use_case),
 ) -> None:
     await use_case.execute(project_id, user_id)
+
+
+@router.get(
+    "/{project_id}/members",
+    response_model=list[MemberResponse],
+    summary="List project members",
+    description="Returns all members of a project with their details.",
+)
+async def list_members(
+    project_id: int,
+    user_id: int = Depends(get_current_user_id),
+    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
+) -> list[MemberResponse]:
+    result = await project_repo.get_by_id(project_id)
+    if not result:
+        from src.domain.exceptions import ProjectNotFoundError
+        raise ProjectNotFoundError()
+    if not await project_repo.is_member(project_id, user_id) and result.owner_id != user_id:
+        from src.domain.exceptions import NotProjectMemberError
+        raise NotProjectMemberError()
+    members = await project_repo.get_members(project_id)
+    return [
+        MemberResponse(user_id=m.user_id, email=m.user_email, full_name=m.full_name)
+        for m in members
+    ]
 
 
 @router.post(

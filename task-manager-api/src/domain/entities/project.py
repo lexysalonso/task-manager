@@ -7,6 +7,7 @@ class ProjectMember:
     project_id: int
     user_id: int
     user_email: str = ""
+    full_name: str = ""
 
 
 @dataclass

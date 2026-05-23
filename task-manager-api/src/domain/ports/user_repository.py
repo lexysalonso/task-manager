@@ -15,3 +15,7 @@ class UserRepository(ABC):
     @abstractmethod
     async def get_by_email(self, email: str) -> User | None:
         raise NotImplementedError
+
+    @abstractmethod
+    async def get_by_ids(self, user_ids: list[int]) -> list[User]:
+        raise NotImplementedError

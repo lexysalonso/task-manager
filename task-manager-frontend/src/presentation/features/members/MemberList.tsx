@@ -10,18 +10,12 @@ import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/application/store/auth.store";
 import { useAddMember, useRemoveMember } from "@/application/hooks/useMembers";
-import { projectsApi } from "@/infrastructure/api/projects.api";
 import { membersApi } from "@/infrastructure/api/members.api";
-import { UserPlus, Trash2, Shield, Mail } from "lucide-react";
+import { UserPlus, Trash2, Shield } from "lucide-react";
 
 interface MemberListProps {
   projectId: number;
   isOwner: boolean;
-}
-
-interface MemberInfo {
-  user_id: number;
-  user_email: string;
 }
 
 export function MemberList({ projectId, isOwner }: MemberListProps) {
@@ -33,28 +27,19 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
   const addMutation = useAddMember(projectId);
   const removeMutation = useRemoveMember(projectId);
 
-  // Fetch project which includes member info via member_ids
-  const { data: project, isLoading } = useQuery({
+  const { data: ownerId } = useQuery({
     queryKey: ["projects", projectId],
-    queryFn: () => projectsApi.getById(projectId),
+    queryFn: async () => {
+      const { projectsApi } = await import("@/infrastructure/api/projects.api");
+      const p = await projectsApi.getById(projectId);
+      return p.owner_id;
+    },
     enabled: !!projectId,
   });
 
-  // Fetch members list properly
-  const { data: membersData, isLoading: membersLoading, refetch } = useQuery({
+  const { data: members = [], isLoading } = useQuery({
     queryKey: ["project-members", projectId],
-    queryFn: async () => {
-      // Since we don't have a direct endpoint for listing members with emails,
-      // we'll use the project data which has member_ids
-      const p = await projectsApi.getById(projectId);
-      return {
-        members: (p.member_ids || []).map((id: number) => ({
-          user_id: id,
-          user_email: id === p.owner_id ? `Owner #${id}` : `User #${id}`,
-        })),
-        ownerId: p.owner_id,
-      };
-    },
+    queryFn: () => membersApi.list(projectId),
     enabled: !!projectId,
   });
 
@@ -65,7 +50,7 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
       onSuccess: () => {
         setAddOpen(false);
         setNewUserId("");
-        refetch();
+        queryClient.invalidateQueries({ queryKey: ["project-members", projectId] });
         queryClient.invalidateQueries({ queryKey: ["projects", projectId] });
       },
     });
@@ -75,13 +60,13 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
     removeMutation.mutate(uid, {
       onSuccess: () => {
         setRemoveId(null);
-        refetch();
+        queryClient.invalidateQueries({ queryKey: ["project-members", projectId] });
         queryClient.invalidateQueries({ queryKey: ["projects", projectId] });
       },
     });
   };
 
-  if (isLoading || membersLoading) {
+  if (isLoading) {
     return (
       <div className="space-y-3">
         <Skeleton className="h-12 w-full" />
@@ -89,9 +74,6 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
       </div>
     );
   }
-
-  const members = membersData?.members || [];
-  const ownerId = membersData?.ownerId;
 
   return (
     <div className="space-y-4">
@@ -136,7 +118,7 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
         {members.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">No se encontraron miembros</p>
         ) : (
-          members.map((member: MemberInfo) => (
+          members.map((member) => (
             <div
               key={member.user_id}
               className="flex items-center justify-between rounded-lg border p-4"
@@ -144,15 +126,12 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
               <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9">
                   <AvatarFallback>
-                    {member.user_email
-                      .split("@")[0]
-                      .slice(0, 2)
-                      .toUpperCase() || "U"}
+                    {(member.full_name || member.email).slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-sm">{member.user_email}</span>
+                    <span className="font-medium text-sm">{member.full_name || member.email}</span>
                     {member.user_id === ownerId && (
                       <Badge variant="default" className="text-xs h-5">
                         <Shield className="mr-1 h-3 w-3" /> Propietario
@@ -162,6 +141,9 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
                       <Badge variant="secondary" className="text-xs h-5">Tú</Badge>
                     )}
                   </div>
+                  {member.full_name && (
+                    <p className="text-xs text-muted-foreground">{member.email}</p>
+                  )}
                 </div>
               </div>
               {isOwner && member.user_id !== ownerId && (
@@ -184,7 +166,7 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
                     <AlertDialogTitle>¿Eliminar miembro?</AlertDialogTitle>
                     <AlertDialogDescription className="space-y-2">
                       <p>
-                        ¿Estás seguro de que deseas eliminar a <strong>{member.user_email}</strong> de este proyecto?
+                        ¿Estás seguro de que deseas eliminar a <strong>{member.full_name || member.email}</strong> de este proyecto?
                       </p>
                       <p className="font-semibold text-destructive">
                         ⚠️ Al eliminar este miembro, todas sus tareas se reasignarán al propietario del proyecto.

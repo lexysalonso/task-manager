@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/presentation/components/ui/button";
 import { Badge } from "@/presentation/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/presentation/components/ui/tabs";
@@ -8,11 +7,9 @@ import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/presentation/components/ui/alert-dialog";
 import { useAuthStore } from "@/application/store/auth.store";
 import { useProject, useDeleteProject, useUpdateProject } from "@/application/hooks/useProjects";
-import { projectsApi } from "@/infrastructure/api/projects.api";
 import { TaskList } from "@/presentation/features/tasks/TaskList";
 import { MemberList } from "@/presentation/features/members/MemberList";
 import { Edit, Trash2, Archive, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -23,12 +20,7 @@ export function ProjectDetail() {
   const deleteMutation = useDeleteProject(projectId);
   const updateMutation = useUpdateProject(projectId);
   const [activeTab, setActiveTab] = useState("tasks");
-
-  const { data: projectFull } = useQuery({
-    queryKey: ["projects", projectId],
-    queryFn: () => projectsApi.getById(projectId),
-    enabled: !!projectId,
-  });
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -63,7 +55,9 @@ export function ProjectDetail() {
   };
 
   const handleArchiveToggle = () => {
-    updateMutation.mutate({ is_archived: !project.is_archived });
+    updateMutation.mutate({ is_archived: !project.is_archived }, {
+      onSuccess: () => setArchiveOpen(false),
+    });
   };
 
   return (
@@ -93,10 +87,33 @@ export function ProjectDetail() {
                 <Edit className="mr-2 h-4 w-4" /> Editar
               </Button>
             </Link>
-            <Button variant="outline" size="sm" onClick={handleArchiveToggle}>
-              <Archive className="mr-2 h-4 w-4" />
-              {project.is_archived ? "Desarchivar" : "Archivar"}
-            </Button>
+            <AlertDialog open={archiveOpen} onOpenChange={setArchiveOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Archive className="mr-2 h-4 w-4" />
+                  {project.is_archived ? "Desarchivar" : "Archivar"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {project.is_archived ? "¿Desarchivar proyecto?" : "¿Archivar proyecto?"}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {project.is_archived
+                      ? `"${project.name}" volverá a estar activo. Los miembros podrán crear y editar tareas nuevamente.`
+                      : `"${project.name}" pasará a ser solo lectura. Los miembros no podrán crear, editar ni eliminar tareas. Puedes desarchivarlo en cualquier momento.`
+                    }
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleArchiveToggle}>
+                    {updateMutation.isPending ? "Guardando..." : project.is_archived ? "Desarchivar" : "Archivar"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm">
@@ -107,7 +124,7 @@ export function ProjectDetail() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>¿Eliminar proyecto?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esto eliminará permanentemente "{project.name}" y todas sus tareas. Esta acción no se puede deshacer.
+                    Esto eliminará permanentemente &quot;{project.name}&quot; y todas sus tareas. Esta acción no se puede deshacer.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -132,7 +149,7 @@ export function ProjectDetail() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="tasks">Tareas</TabsTrigger>
-          <TabsTrigger value="members">Miembros ({projectFull?.member_count || project.member_count})</TabsTrigger>
+          <TabsTrigger value="members">Miembros ({project.member_count})</TabsTrigger>
         </TabsList>
         <TabsContent value="tasks" className="mt-4">
           <TaskList projectId={projectId} isOwner={isOwner} isArchived={project.is_archived} />
