@@ -4,9 +4,14 @@ A full-stack task management system where users can register, log in, create pro
 
 ---
 
-## Quick Start (Docker)
+## Prerequisites
 
-**Prerequisite:** [Docker](https://docs.docker.com/engine/install/) + [Docker Compose](https://docs.docker.com/compose/install/) (v2).
+* **Docker Desktop** installed and running (Windows/macOS) or **Docker Engine + Docker Compose v2** (Linux).
+* **Git**.
+
+---
+
+## Quick Start (Docker)
 
 ```bash
 git clone https://github.com/lexysalonso/task-manager.git
