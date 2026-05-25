@@ -3,9 +3,10 @@ from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 
 from src.config import settings
+from src.domain.ports.token_service import TokenService
 
 
-class JwtService:
+class JwtService(TokenService):
     def create_access_token(self, data: dict[str, str | int]) -> str:
         to_encode = data.copy()
         expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expire_minutes)

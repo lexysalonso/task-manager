@@ -1,8 +1,8 @@
 from src.domain.entities.user import User
 from src.domain.exceptions import DuplicateEmailError
 from src.domain.ports.user_repository import UserRepository
+from src.domain.ports.password_service import PasswordService
 from src.application.dtos.auth_dtos import RegisterInput, RegisterOutput
-from src.infrastructure.security.password_service import PasswordService
 
 
 class RegisterUserUseCase:

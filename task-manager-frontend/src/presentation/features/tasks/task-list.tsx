@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/presentation/components/ui/button";
 import {
   Dialog,
@@ -13,8 +12,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { Badge } from "@/presentation/components/ui/badge";
 import { useFilteredTasks, useCreateTask, useUpdateTask, useDeleteTask, useChangeTaskStatus, useChangeTaskPriority } from "@/application/hooks/use-tasks";
+import { useProjectMembers } from "@/application/hooks/use-members";
 import { useAuthStore } from "@/application/store/auth.store";
-import { membersApi } from "@/infrastructure/api/members.api";
 import { TaskStatusBadge } from "./task-status-badge";
 import { TaskPriorityBadge } from "./task-priority-badge";
 import { TaskForm } from "./task-form";
@@ -47,11 +46,7 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
 
-  const { data: members = [] } = useQuery({
-    queryKey: ["project-members", projectId],
-    queryFn: () => membersApi.list(projectId),
-    enabled: !!projectId,
-  });
+  const { data: members = [] } = useProjectMembers(projectId);
 
   const handleCreate = (data: { name: string; priority?: TaskPriority; assigned_user_id?: number | null }) => {
     createMutation.mutate(data, {

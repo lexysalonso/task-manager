@@ -1,5 +1,3 @@
-from collections.abc import AsyncGenerator
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,6 +10,11 @@ from src.infrastructure.db.repositories import (
 )
 from src.infrastructure.security.jwt_service import JwtService
 from src.infrastructure.security.password_service import PasswordService
+from src.domain.ports.user_repository import UserRepository
+from src.domain.ports.project_repository import ProjectRepository
+from src.domain.ports.task_repository import TaskRepository
+from src.domain.ports.password_service import PasswordService as PasswordServicePort
+from src.domain.ports.token_service import TokenService
 from src.application.use_cases.auth import RegisterUserUseCase, LoginUserUseCase
 from src.application.use_cases.projects import (
     CreateProjectUseCase,
@@ -36,143 +39,143 @@ from src.application.use_cases.tasks import (
 security_scheme = HTTPBearer()
 
 
-def get_password_service() -> PasswordService:
+def get_password_service() -> PasswordServicePort:
     return PasswordService()
 
 
-def get_jwt_service() -> JwtService:
+def get_jwt_service() -> TokenService:
     return JwtService()
 
 
 async def get_user_repo(
     session: AsyncSession = Depends(get_db_session),
-) -> SqlAlchemyUserRepository:
+) -> UserRepository:
     return SqlAlchemyUserRepository(session)
 
 
 async def get_project_repo(
     session: AsyncSession = Depends(get_db_session),
-) -> SqlAlchemyProjectRepository:
+) -> ProjectRepository:
     return SqlAlchemyProjectRepository(session)
 
 
 async def get_task_repo(
     session: AsyncSession = Depends(get_db_session),
-) -> SqlAlchemyTaskRepository:
+) -> TaskRepository:
     return SqlAlchemyTaskRepository(session)
 
 
 async def get_register_use_case(
-    user_repo: SqlAlchemyUserRepository = Depends(get_user_repo),
-    pwd_service: PasswordService = Depends(get_password_service),
+    user_repo: UserRepository = Depends(get_user_repo),
+    pwd_service: PasswordServicePort = Depends(get_password_service),
 ) -> RegisterUserUseCase:
     return RegisterUserUseCase(user_repo, pwd_service)
 
 
 async def get_login_use_case(
-    user_repo: SqlAlchemyUserRepository = Depends(get_user_repo),
-    pwd_service: PasswordService = Depends(get_password_service),
-    jwt_service: JwtService = Depends(get_jwt_service),
+    user_repo: UserRepository = Depends(get_user_repo),
+    pwd_service: PasswordServicePort = Depends(get_password_service),
+    jwt_service: TokenService = Depends(get_jwt_service),
 ) -> LoginUserUseCase:
     return LoginUserUseCase(user_repo, pwd_service, jwt_service)
 
 
 async def get_create_project_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
 ) -> CreateProjectUseCase:
     return CreateProjectUseCase(project_repo)
 
 
 async def get_get_project_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
 ) -> GetProjectUseCase:
     return GetProjectUseCase(project_repo)
 
 
 async def get_list_projects_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
 ) -> ListProjectsUseCase:
     return ListProjectsUseCase(project_repo)
 
 
 async def get_update_project_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
 ) -> UpdateProjectUseCase:
     return UpdateProjectUseCase(project_repo)
 
 
 async def get_delete_project_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
-    task_repo: SqlAlchemyTaskRepository = Depends(get_task_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
+    task_repo: TaskRepository = Depends(get_task_repo),
 ) -> DeleteProjectUseCase:
     return DeleteProjectUseCase(project_repo, task_repo)
 
 
 async def get_add_member_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
-    user_repo: SqlAlchemyUserRepository = Depends(get_user_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
+    user_repo: UserRepository = Depends(get_user_repo),
 ) -> AddMemberUseCase:
     return AddMemberUseCase(project_repo, user_repo)
 
 
 async def get_list_members_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
 ) -> ListMembersUseCase:
     return ListMembersUseCase(project_repo)
 
 
 async def get_search_users_use_case(
-    user_repo: SqlAlchemyUserRepository = Depends(get_user_repo),
+    user_repo: UserRepository = Depends(get_user_repo),
 ) -> SearchUsersUseCase:
     return SearchUsersUseCase(user_repo)
 
 
 async def get_remove_member_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
-    user_repo: SqlAlchemyUserRepository = Depends(get_user_repo),
-    task_repo: SqlAlchemyTaskRepository = Depends(get_task_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
+    user_repo: UserRepository = Depends(get_user_repo),
+    task_repo: TaskRepository = Depends(get_task_repo),
 ) -> RemoveMemberUseCase:
     return RemoveMemberUseCase(project_repo, user_repo, task_repo)
 
 
 async def get_create_task_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
-    task_repo: SqlAlchemyTaskRepository = Depends(get_task_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
+    task_repo: TaskRepository = Depends(get_task_repo),
 ) -> CreateTaskUseCase:
     return CreateTaskUseCase(project_repo, task_repo)
 
 
 async def get_list_tasks_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
-    task_repo: SqlAlchemyTaskRepository = Depends(get_task_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
+    task_repo: TaskRepository = Depends(get_task_repo),
 ) -> ListTasksUseCase:
     return ListTasksUseCase(project_repo, task_repo)
 
 
 async def get_update_task_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
-    task_repo: SqlAlchemyTaskRepository = Depends(get_task_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
+    task_repo: TaskRepository = Depends(get_task_repo),
 ) -> UpdateTaskUseCase:
     return UpdateTaskUseCase(project_repo, task_repo)
 
 
 async def get_delete_task_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
-    task_repo: SqlAlchemyTaskRepository = Depends(get_task_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
+    task_repo: TaskRepository = Depends(get_task_repo),
 ) -> DeleteTaskUseCase:
     return DeleteTaskUseCase(project_repo, task_repo)
 
 
 async def get_change_status_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
-    task_repo: SqlAlchemyTaskRepository = Depends(get_task_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
+    task_repo: TaskRepository = Depends(get_task_repo),
 ) -> ChangeTaskStatusUseCase:
     return ChangeTaskStatusUseCase(project_repo, task_repo)
 
 
 async def get_change_priority_use_case(
-    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
-    task_repo: SqlAlchemyTaskRepository = Depends(get_task_repo),
+    project_repo: ProjectRepository = Depends(get_project_repo),
+    task_repo: TaskRepository = Depends(get_task_repo),
 ) -> ChangeTaskPriorityUseCase:
     return ChangeTaskPriorityUseCase(project_repo, task_repo)
 

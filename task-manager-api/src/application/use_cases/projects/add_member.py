@@ -2,7 +2,6 @@ from src.domain.exceptions import (
     ProjectNotFoundError,
     NotProjectOwnerError,
     UserNotFoundError,
-    NotProjectMemberError,
 )
 from src.domain.ports.user_repository import UserRepository
 from src.domain.ports.project_repository import ProjectRepository

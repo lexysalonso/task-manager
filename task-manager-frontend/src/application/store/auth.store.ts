@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { STORAGE_TOKEN_KEY, STORAGE_USER_KEY } from "@/lib/constants";
 
 interface AuthState {
   token: string | null;
@@ -10,26 +11,26 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
-  token: localStorage.getItem("auth-token"),
+  token: localStorage.getItem(STORAGE_TOKEN_KEY),
   user: (() => {
     try {
-      const stored = localStorage.getItem("auth-user");
+      const stored = localStorage.getItem(STORAGE_USER_KEY);
       return stored ? JSON.parse(stored) : null;
     } catch {
       return null;
     }
   })(),
   setAuth: (token: string) => {
-    localStorage.setItem("auth-token", token);
+    localStorage.setItem(STORAGE_TOKEN_KEY, token);
     set({ token });
   },
   setUser: (user) => {
-    localStorage.setItem("auth-user", JSON.stringify(user));
+    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
     set({ user });
   },
   logout: () => {
-    localStorage.removeItem("auth-token");
-    localStorage.removeItem("auth-user");
+    localStorage.removeItem(STORAGE_TOKEN_KEY);
+    localStorage.removeItem(STORAGE_USER_KEY);
     set({ token: null, user: null });
   },
   isAuthenticated: () => {

@@ -1,7 +1,9 @@
 import bcrypt
 
+from src.domain.ports.password_service import PasswordService as PasswordServicePort
 
-class PasswordService:
+
+class PasswordService(PasswordServicePort):
     def hash_password(self, password: str) -> str:
         return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 

@@ -1,15 +1,14 @@
 from src.domain.exceptions import (
     ProjectNotFoundError,
     TaskNotFoundError,
-    NotProjectMemberError,
-    NotProjectOwnerError,
-    TaskAccessDeniedError,
     ArchivedProjectError,
+    TaskAccessDeniedError,
     InvalidAssignmentError,
 )
 from src.domain.ports.project_repository import ProjectRepository
 from src.domain.ports.task_repository import TaskRepository
 from src.application.dtos.task_dtos import UpdateTaskInput, TaskOutput
+from datetime import datetime, timezone
 
 
 class UpdateTaskUseCase:
@@ -54,7 +53,6 @@ class UpdateTaskUseCase:
                 raise TaskAccessDeniedError()
             task.assigned_user_id = input_dto.assigned_user_id
 
-        from datetime import datetime, timezone
         task.updated_at = datetime.now(timezone.utc)
         updated = await self._task_repository.update(task)
         return TaskOutput(
