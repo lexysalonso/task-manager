@@ -1,8 +1,7 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { membersApi } from "@/infrastructure/api/members.api";
 import { usersApi } from "@/infrastructure/api/users.api";
-import { projectsApi } from "@/infrastructure/api/projects.api";
 import { AxiosError } from "axios";
 import type { ApiError } from "@/domain/types";
 
@@ -14,19 +13,12 @@ export function useProjectMembers(projectId: number) {
   });
 }
 
-export function useProjectOwner(projectId: number) {
-  return useQuery({
-    queryKey: ["project-owner", projectId],
-    queryFn: () => projectsApi.getById(projectId).then((p) => p.owner_id),
-    enabled: !!projectId,
-  });
-}
-
 export function useUserSearch(query: string) {
   return useQuery({
     queryKey: ["users-search", query],
     queryFn: () => usersApi.search(query),
     enabled: query.length >= 2,
+    placeholderData: keepPreviousData,
   });
 }
 

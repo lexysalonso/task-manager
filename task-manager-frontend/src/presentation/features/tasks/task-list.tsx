@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/presentation/components/ui/button";
 import {
   Dialog,
@@ -68,16 +68,20 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
     });
   };
 
-  const canEdit = (assignedUserId: number | null) => {
-    if (isOwner) return true;
-    return assignedUserId === userId;
-  };
+  const canEdit = useMemo(() => {
+    return (assignedUserId: number | null) => {
+      if (isOwner) return true;
+      return assignedUserId === userId;
+    };
+  }, [isOwner, userId]);
 
-  const getMemberName = (assignedUserId: number | null) => {
-    if (!assignedUserId) return "";
-    const member = members.find((m) => m.user_id === assignedUserId);
-    return member ? member.full_name || member.email : `Usuario #${assignedUserId}`;
-  };
+  const getMemberName = useMemo(() => {
+    return (assignedUserId: number | null) => {
+      if (!assignedUserId) return "";
+      const member = members.find((m) => m.user_id === assignedUserId);
+      return member ? member.full_name || member.email : `Usuario #${assignedUserId}`;
+    };
+  }, [members]);
 
   const clearFilters = () => {
     setStatusFilter("all");

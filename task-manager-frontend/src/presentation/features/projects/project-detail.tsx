@@ -155,7 +155,7 @@ export function ProjectDetail() {
           <TaskList projectId={projectId} isOwner={isOwner} isArchived={project.is_archived} />
         </TabsContent>
         <TabsContent value="members" className="mt-4">
-          <MemberList projectId={projectId} isOwner={isOwner} />
+          <MemberList projectId={projectId} isOwner={isOwner} ownerId={project.owner_id} />
         </TabsContent>
       </Tabs>
     </div>

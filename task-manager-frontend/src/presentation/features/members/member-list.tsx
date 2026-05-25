@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
 import { Badge } from "@/presentation/components/ui/badge";
@@ -7,35 +7,41 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/presentation/components/ui/dialog";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { useAuthStore } from "@/application/store/auth.store";
-import { useAddMember, useRemoveMember, useProjectMembers, useProjectOwner, useUserSearch } from "@/application/hooks/use-members";
+import { useAddMember, useRemoveMember, useProjectMembers, useUserSearch } from "@/application/hooks/use-members";
 import { UserPlus, Trash2, Shield, Loader2, Search } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 
 interface MemberListProps {
     projectId: number;
     isOwner: boolean;
+    ownerId?: number | null;
 }
 
-export function MemberList({ projectId, isOwner }: MemberListProps) {
+export function MemberList({ projectId, isOwner, ownerId }: MemberListProps) {
     const userId = useAuthStore((s) => s.user?.id);
     const [addOpen, setAddOpen] = useState(false);
     const [removeId, setRemoveId] = useState<number | null>(null);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [rawSearch, setRawSearch] = useState("");
     const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const debounceRef = useRef<ReturnType<typeof setTimeout>>();
     const addMutation = useAddMember(projectId);
     const removeMutation = useRemoveMember(projectId);
 
-    const { data: ownerId } = useProjectOwner(projectId);
-    const { data: members = [], isLoading } = useProjectMembers(projectId);
+    const [searchQuery, setSearchQuery] = useState("");
+    useEffect(() => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(() => setSearchQuery(rawSearch), 300);
+        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    }, [rawSearch]);
+
+    const { data: members = [], isLoading, isError: membersError } = useProjectMembers(projectId);
     const { data: searchResults = [], isFetching: searching } = useUserSearch(searchQuery);
 
     const existingMemberIds = new Set(members.map((m) => m.user_id));
 
     const handleSearchChange = (value: string) => {
-        setSearchQuery(value);
+        setRawSearch(value);
         setSelectedUserId(null);
-        if (debounceRef.current) clearTimeout(debounceRef.current);
     };
 
     const handleAdd = () => {
@@ -43,7 +49,7 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
         addMutation.mutate(selectedUserId, {
             onSuccess: () => {
                 setAddOpen(false);
-                setSearchQuery("");
+                setRawSearch("");
                 setSelectedUserId(null);
             },
         });
@@ -55,8 +61,7 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
         });
     };
 
-    if (isLoading)
-    {
+    if (isLoading) {
         return (
             <div className="space-y-3">
                 <Skeleton className="h-12 w-full" />
@@ -65,11 +70,19 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
         );
     }
 
+    if (membersError) {
+        return (
+            <div className="text-center py-8">
+                <p className="text-destructive">Error al cargar miembros</p>
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-4">
             {isOwner && (
                 <div className="flex justify-end">
-                    <Dialog open={addOpen} onOpenChange={(open) => { setAddOpen(open); if (!open) { setSearchQuery(""); setSelectedUserId(null); } }}>
+                    <Dialog open={addOpen} onOpenChange={(open) => { setAddOpen(open); if (!open) { setRawSearch(""); setSelectedUserId(null); } }}>
                         <DialogTrigger asChild>
                             <Button size="sm">
                                 <UserPlus className="mr-2 h-4 w-4" /> Agregar Miembro
@@ -90,52 +103,49 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
                                         <Input
                                             placeholder="Buscar por nombre o correo..."
                                             className="pl-9"
-                                            value={searchQuery}
+                                            value={rawSearch}
                                             onChange={(e) => handleSearchChange(e.target.value)}
                                         />
                                     </div>
-                                    {searching && (
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <Loader2 className="h-3 w-3 animate-spin" /> Buscando...
-                                        </div>
-                                    )}
-                                    {searchQuery.length >= 2 && !searching && searchResults.length > 0 && (
-                                        <div className="max-h-48 overflow-y-auto border rounded-md">
-                                            {searchResults.map((user) => {
-                                                const isMember = existingMemberIds.has(user.id);
-                                                const isOwnerUser = user.id === ownerId;
-                                                const selected = selectedUserId === user.id;
-                                                return (
-                                                    <button
-                                                        key={user.id}
-                                                        type="button"
-                                                        disabled={isMember || isOwnerUser}
-                                                        className={`w-full text-left px-3 py-2 text-sm transition-colors
+                                    <div>
+                                        {searchQuery.length < 2 ? (
+                                            <p className="text-xs text-muted-foreground">Escribe al menos 2 caracteres para buscar usuarios.</p>
+                                        ) : searching ? (
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+                                                <Loader2 className="h-3 w-3 animate-spin" /> Buscando...
+                                            </div>
+                                        ) : searchResults.length > 0 ? (
+                                            <div className="max-h-48 overflow-y-auto border rounded-md">
+                                                {searchResults.map((user) => {
+                                                    const isMember = existingMemberIds.has(user.id);
+                                                    const isOwnerUser = user.id === ownerId;
+                                                    const selected = selectedUserId === user.id;
+                                                    return (
+                                                        <button
+                                                            key={user.id}
+                                                            type="button"
+                                                            disabled={isMember || isOwnerUser}
+                                                            className={`w-full text-left px-3 py-2 text-sm transition-colors
                               ${selected ? "bg-primary/10" : "hover:bg-muted"}
                               ${isMember || isOwnerUser ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
                             `}
-                                                        onClick={() => setSelectedUserId(user.id)}
-                                                    >
-                                                        <span className="font-medium">{user.full_name}</span>
-                                                        <span className="text-muted-foreground ml-2">({user.email})</span>
-                                                        {isMember && <span className="text-xs text-muted-foreground ml-2">— ya es miembro</span>}
-                                                        {isOwnerUser && <span className="text-xs text-muted-foreground ml-2">— es el propietario</span>}
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                    {searchQuery.length >= 2 && !searching && searchResults.length === 0 && (
-                                        <p className="text-sm text-muted-foreground">No se encontraron usuarios</p>
-                                    )}
-                                    {searchQuery.length < 2 && (
-                                        <p className="text-xs text-muted-foreground">
-                                            Escribe al menos 2 caracteres para buscar usuarios.
-                                        </p>
-                                    )}
+                                                            onClick={() => setSelectedUserId(user.id)}
+                                                        >
+                                                            <span className="font-medium">{user.full_name}</span>
+                                                            <span className="text-muted-foreground ml-2">({user.email})</span>
+                                                            {isMember && <span className="text-xs text-muted-foreground ml-2">— ya es miembro</span>}
+                                                            {isOwnerUser && <span className="text-xs text-muted-foreground ml-2">— es el propietario</span>}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground pt-4">No se encontraron usuarios</p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="flex justify-end gap-2">
-                                    <Button variant="outline" onClick={() => { setAddOpen(false); setSearchQuery(""); setSelectedUserId(null); }}>Cancelar</Button>
+                                    <Button variant="outline" onClick={() => { setAddOpen(false); setRawSearch(""); setSelectedUserId(null); }}>Cancelar</Button>
                                     <Button onClick={handleAdd} disabled={!selectedUserId || addMutation.isPending}>
                                         {addMutation.isPending ? "Agregando..." : "Agregar"}
                                     </Button>

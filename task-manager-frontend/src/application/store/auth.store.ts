@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import { STORAGE_TOKEN_KEY, STORAGE_USER_KEY } from "@/lib/constants";
+import type { User } from "@/domain/types";
 
 interface AuthState {
   token: string | null;
-  user: { id: number; email: string; full_name: string } | null;
+  user: User | null;
   setAuth: (token: string) => void;
-  setUser: (user: { id: number; email: string; full_name: string }) => void;
+  setUser: (user: User) => void;
   logout: () => void;
   isAuthenticated: () => boolean;
 }
