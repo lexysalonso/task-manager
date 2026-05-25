@@ -6,11 +6,11 @@ A full-stack task management system where users can register, log in, create pro
 
 ## Quick Start
 
-Elige la opcion que prefieras:
+Choose one of the following options:
 
-### Docker (recomendada)
+### Docker (recommended)
 
-**Requisito:** Docker Desktop (o Docker Engine + Docker Compose v2) y Git.
+**Prerequisites:** Docker Desktop (or Docker Engine + Docker Compose v2) and Git.
 
 ```bash
 git clone https://github.com/lexysalonso/task-manager.git
@@ -19,7 +19,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-| Servicio   | URL                              |
+| Service    | URL                              |
 |------------|----------------------------------|
 | Frontend   | http://localhost:5173            |
 | API        | http://localhost:8000            |
@@ -29,7 +29,7 @@ docker compose up --build
 
 ### Local Development (without Docker)
 
-**Requisitos:** Node.js 20+, Python 3.12+, PostgreSQL 15+.
+**Prerequisites:** Node.js 20+, Python 3.12+, PostgreSQL 15+.
 
 #### Backend
 
@@ -39,7 +39,7 @@ python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp ../.env.example .env
-# Configura DATABASE_URL en .env con tu PostgreSQL local
+# Set DATABASE_URL in .env to point to your local PostgreSQL
 alembic upgrade head
 uvicorn src.main:app --reload
 ```
