@@ -4,7 +4,9 @@ import { z } from "zod";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
 import { Label } from "@/presentation/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/components/ui/select";
 import { TaskPriority, type ProjectMember } from "@/domain/types";
+import { priorityLabels } from "@/lib/constants";
 import { Loader2 } from "lucide-react";
 
 const taskSchema = z.object({
@@ -43,30 +45,36 @@ export function TaskForm({ members, defaultValues, onSubmit, isPending, mode, on
       </div>
       <div className="space-y-2">
         <Label htmlFor="task-priority">Prioridad</Label>
-        <select
-          id="task-priority"
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+        <Select
           defaultValue={defaultValues?.priority || TaskPriority.MEDIUM}
-          onChange={(e) => setValue("priority", e.target.value as TaskPriority)}
+          onValueChange={(v) => setValue("priority", v as TaskPriority)}
         >
-          <option value={TaskPriority.LOW}>Baja</option>
-          <option value={TaskPriority.MEDIUM}>Media</option>
-          <option value={TaskPriority.HIGH}>Alta</option>
-        </select>
+          <SelectTrigger id="task-priority">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(priorityLabels).map(([value, label]) => (
+              <SelectItem key={value} value={value}>{label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-2">
         <Label htmlFor="task-assign">Asignar a</Label>
-        <select
-          id="task-assign"
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-          defaultValue={defaultValues?.assigned_user_id || ""}
-          onChange={(e) => setValue("assigned_user_id", e.target.value ? Number(e.target.value) : null)}
+        <Select
+          defaultValue={String(defaultValues?.assigned_user_id || "none")}
+          onValueChange={(v) => setValue("assigned_user_id", v === "none" ? null : Number(v))}
         >
-          <option value="">Sin asignar</option>
-          {members.map((m) => (
-            <option key={m.user_id} value={m.user_id}>{m.full_name || m.email}</option>
-          ))}
-        </select>
+          <SelectTrigger id="task-assign">
+            <SelectValue placeholder="Sin asignar" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">Sin asignar</SelectItem>
+            {members.map((m) => (
+              <SelectItem key={m.user_id} value={String(m.user_id)}>{m.full_name || m.email}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="flex gap-2 justify-end">
         {onCancel && (

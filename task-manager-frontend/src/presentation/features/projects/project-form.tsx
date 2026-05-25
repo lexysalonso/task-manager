@@ -3,7 +3,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
+import { Textarea } from "@/presentation/components/ui/textarea";
 import { Label } from "@/presentation/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/components/ui/select";
 import { Loader2 } from "lucide-react";
 
 const projectSchema = z.object({
@@ -40,9 +42,8 @@ export function ProjectForm({ defaultValues, onSubmit, isPending, mode }: Projec
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">Descripción</Label>
-        <textarea
+        <Textarea
           id="description"
-          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="Breve descripción de tu proyecto (opcional)"
           {...register("description")}
         />
@@ -55,15 +56,18 @@ export function ProjectForm({ defaultValues, onSubmit, isPending, mode }: Projec
             name="is_archived"
             control={control}
             render={({ field }) => (
-              <select
-                id="is_archived"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+              <Select
                 value={field.value ? "archived" : "active"}
-                onChange={(e) => field.onChange(e.target.value === "archived")}
+                onValueChange={(v) => field.onChange(v === "archived")}
               >
-                <option value="active">Activo</option>
-                <option value="archived">Archivado</option>
-              </select>
+                <SelectTrigger id="is_archived">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Activo</SelectItem>
+                  <SelectItem value="archived">Archivado</SelectItem>
+                </SelectContent>
+              </Select>
             )}
           />
         </div>

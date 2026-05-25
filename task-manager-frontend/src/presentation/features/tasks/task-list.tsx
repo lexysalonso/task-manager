@@ -19,6 +19,7 @@ import { TaskStatusBadge } from "./task-status-badge";
 import { TaskPriorityBadge } from "./task-priority-badge";
 import { TaskForm } from "./task-form";
 import { TaskStatus, TaskPriority, type Task } from "@/domain/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/components/ui/select";
 import { Plus, Trash2, Edit, ClipboardList } from "lucide-react";
 import { statusLabels, priorityLabels } from "@/lib/constants";
 
@@ -30,9 +31,13 @@ interface TaskListProps {
 
 export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
   const userId = useAuthStore((s) => s.user?.id);
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | "">("");
-  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "">("");
-  const { tasks, isLoading, isError } = useFilteredTasks(projectId, statusFilter, priorityFilter);
+  const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
+  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "all">("all");
+  const { tasks, isLoading, isError } = useFilteredTasks(
+    projectId,
+    statusFilter === "all" ? "" : statusFilter,
+    priorityFilter === "all" ? "" : priorityFilter,
+  );
   const createMutation = useCreateTask(projectId);
   const updateMutation = useUpdateTask(projectId);
   const deleteMutation = useDeleteTask(projectId);
@@ -80,8 +85,8 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
   };
 
   const clearFilters = () => {
-    setStatusFilter("");
-    setPriorityFilter("");
+    setStatusFilter("all");
+    setPriorityFilter("all");
   };
 
   if (isLoading) {
@@ -106,26 +111,28 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex gap-2">
-          <select
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm cursor-pointer"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "")}
-          >
-            <option value="">Todos los estados</option>
-            {Object.entries(statusLabels).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
-          <select
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm cursor-pointer"
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | "")}
-          >
-            <option value="">Todas las prioridades</option>
-            {Object.entries(priorityLabels).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-          </select>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as TaskStatus | "all")}>
+            <SelectTrigger className="h-9 w-[170px]">
+              <SelectValue placeholder="Todos los estados" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los estados</SelectItem>
+              {Object.entries(statusLabels).map(([value, label]) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as TaskPriority | "all")}>
+            <SelectTrigger className="h-9 w-[180px]">
+              <SelectValue placeholder="Todas las prioridades" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las prioridades</SelectItem>
+              {Object.entries(priorityLabels).map(([value, label]) => (
+                <SelectItem key={value} value={value}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {(statusFilter || priorityFilter) && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>Limpiar</Button>
           )}
@@ -192,34 +199,42 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
                 )}
                 {!isArchived && canEdit(task.assigned_user_id) && (
                   <div className="flex gap-2 mt-2">
-                    <select
-                      className="h-7 text-xs rounded border border-input bg-background px-2 cursor-pointer"
+                    <Select
                       value={task.status}
-                      onChange={(e) =>
+                      onValueChange={(v) =>
                         changeStatusMutation.mutate({
                           taskId: task.id,
-                          payload: { status: e.target.value as TaskStatus },
+                          payload: { status: v as TaskStatus },
                         })
                       }
                     >
-                      {Object.entries(statusLabels).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                    <select
-                      className="h-7 text-xs rounded border border-input bg-background px-2 cursor-pointer"
+                      <SelectTrigger className="h-7 text-xs w-[130px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(statusLabels).map(([value, label]) => (
+                          <SelectItem key={value} value={value} className="text-xs">{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select
                       value={task.priority}
-                      onChange={(e) =>
+                      onValueChange={(v) =>
                         changePriorityMutation.mutate({
                           taskId: task.id,
-                          payload: { priority: e.target.value as TaskPriority },
+                          payload: { priority: v as TaskPriority },
                         })
                       }
                     >
-                      {Object.entries(priorityLabels).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
+                      <SelectTrigger className="h-7 text-xs w-[110px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(priorityLabels).map(([value, label]) => (
+                          <SelectItem key={value} value={value} className="text-xs">{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
               </div>

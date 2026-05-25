@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/presentation/components/ui/button";
 import { Input } from "@/presentation/components/ui/input";
 import { Badge } from "@/presentation/components/ui/badge";
@@ -8,10 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/presentation/components/ui/dialog";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { useAuthStore } from "@/application/store/auth.store";
-import { useAddMember, useRemoveMember } from "@/application/hooks/use-members";
-import { membersApi } from "@/infrastructure/api/members.api";
-import { usersApi } from "@/infrastructure/api/users.api";
-import { projectsApi } from "@/infrastructure/api/projects.api";
+import { useAddMember, useRemoveMember, useProjectMembers, useProjectOwner, useUserSearch } from "@/application/hooks/use-members";
 import { UserPlus, Trash2, Shield, Loader2, Search } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 
@@ -30,23 +26,9 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
     const addMutation = useAddMember(projectId);
     const removeMutation = useRemoveMember(projectId);
 
-    const { data: ownerId } = useQuery({
-        queryKey: ["project-owner", projectId],
-        queryFn: () => projectsApi.getById(projectId).then((p) => p.owner_id),
-        enabled: !!projectId,
-    });
-
-    const { data: members = [], isLoading } = useQuery({
-        queryKey: ["project-members", projectId],
-        queryFn: () => membersApi.list(projectId),
-        enabled: !!projectId,
-    });
-
-    const { data: searchResults = [], isFetching: searching } = useQuery({
-        queryKey: ["users-search", searchQuery],
-        queryFn: () => usersApi.search(searchQuery),
-        enabled: searchQuery.length >= 2,
-    });
+    const { data: ownerId } = useProjectOwner(projectId);
+    const { data: members = [], isLoading } = useProjectMembers(projectId);
+    const { data: searchResults = [], isFetching: searching } = useUserSearch(searchQuery);
 
     const existingMemberIds = new Set(members.map((m) => m.user_id));
 
