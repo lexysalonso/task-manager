@@ -5,7 +5,7 @@ import { Badge } from "@/presentation/components/ui/badge";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { useProjects } from "@/application/hooks/use-projects";
 import { useAuthStore } from "@/application/store/auth.store";
-import { Plus, Users, Archive } from "lucide-react";
+import { Plus, Users, Archive, Circle } from "lucide-react";
 
 export function ProjectList() {
   const { data, isLoading, isError } = useProjects();
@@ -94,10 +94,12 @@ export function ProjectList() {
               <CardHeader>
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-lg">{project.name}</CardTitle>
-                  {project.is_archived && (
+                  {project.is_archived ? (
                     <Badge variant="outline" className="shrink-0">
                       <Archive className="mr-1 h-3 w-3" /> Archivado
                     </Badge>
+                  ) : (
+                    <Circle className="h-3 w-3 shrink-0 mt-1 fill-green-500 text-green-500" />
                   )}
                 </div>
                 {project.description && (

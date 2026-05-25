@@ -37,6 +37,7 @@ export function useRemoveMember(projectId: number) {
     mutationFn: (userId: number) => membersApi.remove(projectId, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["project-members", projectId] });
       queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
       toast.success("Miembro eliminado. Tareas reasignadas al propietario.");
     },
