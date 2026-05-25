@@ -4,14 +4,13 @@ A full-stack task management system where users can register, log in, create pro
 
 ---
 
-## Prerequisites
+## Quick Start
 
-* **Docker Desktop** installed and running (Windows/macOS) or **Docker Engine + Docker Compose v2** (Linux).
-* **Git**.
+Elige la opcion que prefieras:
 
----
+### Docker (recomendada)
 
-## Quick Start (Docker)
+**Requisito:** Docker Desktop (o Docker Engine + Docker Compose v2) y Git.
 
 ```bash
 git clone https://github.com/lexysalonso/task-manager.git
@@ -20,15 +19,39 @@ cp .env.example .env
 docker compose up --build
 ```
 
-No need to install Python, Node.js, or PostgreSQL locally. Docker handles everything.
-
-| Service    | URL                              |
+| Servicio   | URL                              |
 |------------|----------------------------------|
 | Frontend   | http://localhost:5173            |
 | API        | http://localhost:8000            |
 | Health     | http://localhost:8000/api/v1/health |
 | Swagger UI | http://localhost:8000/docs       |
 | ReDoc      | http://localhost:8000/redoc      |
+
+### Local Development (without Docker)
+
+**Requisitos:** Node.js 20+, Python 3.12+, PostgreSQL 15+.
+
+#### Backend
+
+```bash
+cd task-manager-api
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp ../.env.example .env
+# Configura DATABASE_URL en .env con tu PostgreSQL local
+alembic upgrade head
+uvicorn src.main:app --reload
+```
+
+#### Frontend
+
+```bash
+cd task-manager-frontend
+corepack enable && pnpm install
+cp ../.env.example .env.local
+pnpm dev
+```
 
 ---
 
@@ -145,36 +168,6 @@ State management follows a three-layer strategy. **TanStack Query** owns all ser
 6. Tasks can only be assigned to current members of the project.
 7. When a member is removed, all their tasks are reassigned to the owner.
 8. Archived projects are fully read-only for tasks (no create/edit/delete). Viewing tasks of archived projects is allowed for all members.
-
----
-
-## Local Development (without Docker)
-
-### Prerequisites
-- Node.js 20+
-- Python 3.12+
-- PostgreSQL 15+
-
-### Backend
-
-```bash
-cd task-manager-api
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp ../.env.example .env
-alembic upgrade head
-uvicorn src.main:app --reload
-```
-
-### Frontend
-
-```bash
-cd task-manager-frontend
-corepack enable && pnpm install
-cp ../.env.example .env.local
-pnpm dev
-```
 
 ---
 
