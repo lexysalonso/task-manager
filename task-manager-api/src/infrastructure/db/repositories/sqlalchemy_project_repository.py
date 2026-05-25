@@ -50,9 +50,11 @@ class SqlAlchemyProjectRepository(ProjectRepository):
             ProjectMemberModel.user_id == user_id
         )
         result = await self._session.execute(
-            select(ProjectModel).where(
+            select(ProjectModel)
+            .where(
                 (ProjectModel.owner_id == user_id) | (ProjectModel.id.in_(subq))
             )
+            .order_by(ProjectModel.created_at.desc())
         )
         models = result.scalars().all()
         return [
