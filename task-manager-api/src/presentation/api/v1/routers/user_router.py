@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 
-from src.presentation.api.v1.dependencies import get_user_repo, get_current_user_id
-from src.infrastructure.db.repositories import SqlAlchemyUserRepository
+from src.presentation.api.v1.dependencies import get_current_user_id, get_search_users_use_case
+from src.application.use_cases.users import SearchUsersUseCase
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -14,10 +14,6 @@ router = APIRouter(prefix="/users", tags=["Users"])
 async def search_users(
     q: str = Query(..., min_length=1, description="Search query"),
     user_id: int = Depends(get_current_user_id),
-    user_repo: SqlAlchemyUserRepository = Depends(get_user_repo),
+    use_case: SearchUsersUseCase = Depends(get_search_users_use_case),
 ) -> list[dict]:
-    users = await user_repo.search(q)
-    return [
-        {"id": u.id, "email": u.email, "full_name": u.full_name}
-        for u in users
-    ]
+    return await use_case.execute(q)

@@ -21,7 +21,9 @@ from src.application.use_cases.projects import (
     DeleteProjectUseCase,
     AddMemberUseCase,
     RemoveMemberUseCase,
+    ListMembersUseCase,
 )
+from src.application.use_cases.users import SearchUsersUseCase
 from src.application.use_cases.tasks import (
     CreateTaskUseCase,
     ListTasksUseCase,
@@ -111,6 +113,18 @@ async def get_add_member_use_case(
     user_repo: SqlAlchemyUserRepository = Depends(get_user_repo),
 ) -> AddMemberUseCase:
     return AddMemberUseCase(project_repo, user_repo)
+
+
+async def get_list_members_use_case(
+    project_repo: SqlAlchemyProjectRepository = Depends(get_project_repo),
+) -> ListMembersUseCase:
+    return ListMembersUseCase(project_repo)
+
+
+async def get_search_users_use_case(
+    user_repo: SqlAlchemyUserRepository = Depends(get_user_repo),
+) -> SearchUsersUseCase:
+    return SearchUsersUseCase(user_repo)
 
 
 async def get_remove_member_use_case(

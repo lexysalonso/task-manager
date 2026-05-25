@@ -5,6 +5,7 @@ from .update_project import UpdateProjectUseCase
 from .delete_project import DeleteProjectUseCase
 from .add_member import AddMemberUseCase
 from .remove_member import RemoveMemberUseCase
+from .list_members import ListMembersUseCase
 
 __all__ = [
     "CreateProjectUseCase",
@@ -14,4 +15,5 @@ __all__ = [
     "DeleteProjectUseCase",
     "AddMemberUseCase",
     "RemoveMemberUseCase",
+    "ListMembersUseCase",
 ]
