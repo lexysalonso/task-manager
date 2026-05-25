@@ -20,6 +20,7 @@ import { TaskPriorityBadge } from "./task-priority-badge";
 import { TaskForm } from "./task-form";
 import { TaskStatus, TaskPriority, type Task } from "@/domain/types";
 import { Plus, Trash2, Edit, ClipboardList } from "lucide-react";
+import { statusLabels, priorityLabels } from "@/lib/constants";
 
 interface TaskListProps {
   projectId: number;
@@ -111,9 +112,9 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
             onChange={(e) => setStatusFilter(e.target.value as TaskStatus | "")}
           >
             <option value="">Todos los estados</option>
-            <option value={TaskStatus.PENDING}>Pendiente</option>
-            <option value={TaskStatus.IN_PROGRESS}>En Progreso</option>
-            <option value={TaskStatus.COMPLETED}>Completada</option>
+            {Object.entries(statusLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
           </select>
           <select
             className="h-9 rounded-md border border-input bg-background px-3 text-sm cursor-pointer"
@@ -121,9 +122,9 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
             onChange={(e) => setPriorityFilter(e.target.value as TaskPriority | "")}
           >
             <option value="">Todas las prioridades</option>
-            <option value={TaskPriority.LOW}>Baja</option>
-            <option value={TaskPriority.MEDIUM}>Media</option>
-            <option value={TaskPriority.HIGH}>Alta</option>
+            {Object.entries(priorityLabels).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
           </select>
           {(statusFilter || priorityFilter) && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>Limpiar</Button>
@@ -201,9 +202,9 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
                         })
                       }
                     >
-                      <option value={TaskStatus.PENDING}>Pendiente</option>
-                      <option value={TaskStatus.IN_PROGRESS}>En Progreso</option>
-                      <option value={TaskStatus.COMPLETED}>Completada</option>
+                      {Object.entries(statusLabels).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
                     </select>
                     <select
                       className="h-7 text-xs rounded border border-input bg-background px-2 cursor-pointer"
@@ -215,9 +216,9 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
                         })
                       }
                     >
-                      <option value={TaskPriority.LOW}>Baja</option>
-                      <option value={TaskPriority.MEDIUM}>Media</option>
-                      <option value={TaskPriority.HIGH}>Alta</option>
+                      {Object.entries(priorityLabels).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
                     </select>
                   </div>
                 )}

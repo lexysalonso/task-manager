@@ -12,17 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/presentation/components/u
 import { useAuthStore } from "@/application/store/auth.store";
 import { useLogout } from "@/application/hooks/use-auth";
 import { User } from "lucide-react";
-
-function decodeTokenPayload(token: string): Record<string, unknown> | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    return JSON.parse(atob(base64));
-  } catch {
-    return null;
-  }
-}
+import { decodeTokenPayload } from "@/lib/jwt";
+import { getInitials } from "@/lib/utils";
 
 export function Navbar() {
   const token = useAuthStore((s) => s.token);
@@ -32,14 +23,7 @@ export function Navbar() {
   const fallbackUser = !user && token ? decodeTokenPayload(token) : null;
   const displayName = user?.full_name || (fallbackUser?.email as string) || null;
   const displayEmail = user?.email || (fallbackUser?.email as string) || null;
-  const initials = displayName
-    ? displayName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : null;
+  const initials = getInitials(displayName);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background">

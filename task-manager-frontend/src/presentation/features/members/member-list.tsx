@@ -12,6 +12,7 @@ import { useAddMember, useRemoveMember } from "@/application/hooks/use-members";
 import { membersApi } from "@/infrastructure/api/members.api";
 import { usersApi } from "@/infrastructure/api/users.api";
 import { UserPlus, Trash2, Shield, Loader2, Search } from "lucide-react";
+import { getInitials } from "@/lib/utils";
 
 interface MemberListProps {
   projectId: number;
@@ -177,7 +178,7 @@ export function MemberList({ projectId, isOwner }: MemberListProps) {
               <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9">
                   <AvatarFallback>
-                    {(member.full_name || member.email).slice(0, 2).toUpperCase()}
+                    {getInitials(member.full_name || member.email)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
