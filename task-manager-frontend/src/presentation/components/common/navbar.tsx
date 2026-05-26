@@ -35,7 +35,7 @@ export function Navbar() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
-                <AvatarImage src="" />
+                <AvatarImage src={undefined} />
                 <AvatarFallback>
                   {initials ? initials : <User className="h-5 w-5" />}
                 </AvatarFallback>

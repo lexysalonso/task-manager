@@ -8,9 +8,11 @@ class ListProjectsUseCase:
 
     async def execute(self, user_id: int) -> ProjectListOutput:
         projects = await self._project_repository.list_for_user(user_id)
+        project_ids = [p.id for p in projects]
+        members_by_project = await self._project_repository.get_members_for_projects(project_ids)
         outputs: list[ProjectOutput] = []
         for project in projects:
-            members = await self._project_repository.get_members(project.id)
+            members = members_by_project.get(project.id, [])
             outputs.append(
                 ProjectOutput(
                     id=project.id,

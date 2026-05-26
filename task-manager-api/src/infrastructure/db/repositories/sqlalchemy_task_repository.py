@@ -2,6 +2,7 @@ from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.entities.task import Task
+from src.domain.exceptions import TaskNotFoundError
 from src.domain.ports.task_repository import TaskRepository
 from src.infrastructure.db.models.task_model import TaskModel
 
@@ -71,7 +72,7 @@ class SqlAlchemyTaskRepository(TaskRepository):
     async def update(self, task: Task) -> Task:
         model = await self._session.get(TaskModel, task.id)
         if not model:
-            raise ValueError("Task not found")
+            raise TaskNotFoundError()
         model.name = task.name
         model.status = task.status
         model.priority = task.priority

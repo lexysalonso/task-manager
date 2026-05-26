@@ -18,7 +18,15 @@ class LoginUserUseCase:
 
     async def execute(self, input_dto: LoginInput) -> LoginOutput:
         user = await self._user_repository.get_by_email(input_dto.email)
-        if not user or not self._password_service.verify_password(
+        if user is None:
+            # Always run verification to prevent timing attacks
+            self._password_service.verify_password(
+                input_dto.password,
+                "$2b$12$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            )
+            raise InvalidCredentialsError()
+
+        if not self._password_service.verify_password(
             input_dto.password, user.hashed_password
         ):
             raise InvalidCredentialsError()

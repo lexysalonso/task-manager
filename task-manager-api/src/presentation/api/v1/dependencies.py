@@ -8,7 +8,6 @@ from src.infrastructure.db.repositories import (
     SqlAlchemyProjectRepository,
     SqlAlchemyTaskRepository,
 )
-from src.infrastructure.security.jwt_service import JwtService
 from src.infrastructure.security.password_service import PasswordService
 from src.domain.ports.user_repository import UserRepository
 from src.domain.ports.project_repository import ProjectRepository
@@ -106,9 +105,8 @@ async def get_update_project_use_case(
 
 async def get_delete_project_use_case(
     project_repo: ProjectRepository = Depends(get_project_repo),
-    task_repo: TaskRepository = Depends(get_task_repo),
 ) -> DeleteProjectUseCase:
-    return DeleteProjectUseCase(project_repo, task_repo)
+    return DeleteProjectUseCase(project_repo)
 
 
 async def get_add_member_use_case(
@@ -182,7 +180,7 @@ async def get_change_priority_use_case(
 
 async def get_current_user_id(
     credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
-    jwt_service: JwtService = Depends(get_jwt_service),
+    jwt_service: TokenService = Depends(get_jwt_service),
 ) -> int:
     token = credentials.credentials
     payload = jwt_service.decode_access_token(token)

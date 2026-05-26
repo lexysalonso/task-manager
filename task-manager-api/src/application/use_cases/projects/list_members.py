@@ -1,12 +1,13 @@
 from src.domain.exceptions import ProjectNotFoundError, NotProjectMemberError
 from src.domain.ports.project_repository import ProjectRepository
+from src.application.dtos.member_dtos import MemberDTO
 
 
 class ListMembersUseCase:
     def __init__(self, project_repository: ProjectRepository) -> None:
         self._project_repository = project_repository
 
-    async def execute(self, project_id: int, user_id: int) -> list[dict]:
+    async def execute(self, project_id: int, user_id: int) -> list[MemberDTO]:
         project = await self._project_repository.get_by_id(project_id)
         if not project:
             raise ProjectNotFoundError()
@@ -16,6 +17,6 @@ class ListMembersUseCase:
 
         members = await self._project_repository.get_members(project_id)
         return [
-            {"user_id": m.user_id, "email": m.user_email, "full_name": m.full_name}
+            MemberDTO(user_id=m.user_id, email=m.user_email, full_name=m.full_name)
             for m in members
         ]

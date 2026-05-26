@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 @dataclass
@@ -17,5 +17,5 @@ class Project:
     description: str = ""
     is_archived: bool = False
     owner_id: int = 0
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     members: list[ProjectMember] = field(default_factory=list)

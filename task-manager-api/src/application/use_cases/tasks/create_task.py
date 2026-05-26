@@ -34,7 +34,7 @@ class CreateTaskUseCase:
         if project.is_archived:
             raise ArchivedProjectError()
 
-        assign_to = input_dto.assigned_user_id or user_id
+        assign_to = input_dto.assigned_user_id if input_dto.assigned_user_id is not None else user_id
         if not await self._project_repository.is_member(project_id, assign_to):
             raise InvalidAssignmentError()
 

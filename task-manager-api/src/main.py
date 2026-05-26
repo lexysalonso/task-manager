@@ -6,8 +6,6 @@ from fastapi.responses import JSONResponse
 
 from src.config import settings
 from src.domain.exceptions import DomainException
-from src.infrastructure.db.database import engine
-from src.infrastructure.db.models.base import Base
 from src.presentation.api.v1.routers import (
     auth_router,
     user_router,
@@ -76,7 +74,4 @@ app.include_router(project_router, prefix="/api/v1")
 app.include_router(task_router, prefix="/api/v1")
 
 
-@app.on_event("startup")
-async def startup() -> None:
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+

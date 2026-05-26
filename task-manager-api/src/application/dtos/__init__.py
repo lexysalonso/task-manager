@@ -7,6 +7,8 @@ from .project_dtos import (
     UpdateProjectInput,
     AddMemberInput,
 )
+from .member_dtos import MemberDTO
+from .user_dtos import UserSearchResult
 from .task_dtos import (
     CreateTaskInput,
     TaskOutput,
@@ -27,6 +29,8 @@ __all__ = [
     "ProjectListOutput",
     "UpdateProjectInput",
     "AddMemberInput",
+    "MemberDTO",
+    "UserSearchResult",
     "CreateTaskInput",
     "TaskOutput",
     "TaskListOutput",

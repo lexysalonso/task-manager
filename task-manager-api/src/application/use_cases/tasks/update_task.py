@@ -1,5 +1,6 @@
 from src.domain.exceptions import (
     ProjectNotFoundError,
+    NotProjectMemberError,
     TaskNotFoundError,
     ArchivedProjectError,
     TaskAccessDeniedError,

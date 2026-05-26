@@ -2,6 +2,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.domain.entities.project import Project, ProjectMember
+from src.domain.exceptions import ProjectNotFoundError
 from src.domain.ports.project_repository import ProjectRepository
 from src.infrastructure.db.models.project_model import ProjectModel, ProjectMemberModel
 from src.infrastructure.db.models.user_model import UserModel
@@ -72,7 +73,7 @@ class SqlAlchemyProjectRepository(ProjectRepository):
     async def update(self, project: Project) -> Project:
         model = await self._session.get(ProjectModel, project.id)
         if not model:
-            raise ValueError("Project not found")
+            raise ProjectNotFoundError()
         model.name = project.name
         model.description = project.description
         model.is_archived = project.is_archived
@@ -115,6 +116,21 @@ class SqlAlchemyProjectRepository(ProjectRepository):
             ProjectMember(project_id=pm.project_id, user_id=pm.user_id, user_email=email, full_name=full_name)
             for pm, email, full_name in rows
         ]
+
+    async def get_members_for_projects(self, project_ids: list[int]) -> dict[int, list[ProjectMember]]:
+        if not project_ids:
+            return {}
+        result = await self._session.execute(
+            select(ProjectMemberModel, UserModel.email, UserModel.full_name)
+            .join(UserModel, ProjectMemberModel.user_id == UserModel.id)
+            .where(ProjectMemberModel.project_id.in_(project_ids))
+        )
+        rows = result.all()
+        members_by_project: dict[int, list[ProjectMember]] = {}
+        for pm, email, full_name in rows:
+            member = ProjectMember(project_id=pm.project_id, user_id=pm.user_id, user_email=email, full_name=full_name)
+            members_by_project.setdefault(pm.project_id, []).append(member)
+        return members_by_project
 
     async def is_member(self, project_id: int, user_id: int) -> bool:
         result = await self._session.execute(

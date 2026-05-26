@@ -170,8 +170,8 @@ async def list_members(
     user_id: int = Depends(get_current_user_id),
     use_case: ListMembersUseCase = Depends(get_list_members_use_case),
 ) -> list[MemberResponse]:
-    members = await use_case.execute(project_id, user_id)
-    return [MemberResponse(**m) for m in members]
+    result = await use_case.execute(project_id, user_id)
+    return [MemberResponse(user_id=m.user_id, email=m.email, full_name=m.full_name) for m in result]
 
 
 @router.post(

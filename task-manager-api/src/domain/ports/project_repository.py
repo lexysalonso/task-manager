@@ -37,5 +37,9 @@ class ProjectRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_members_for_projects(self, project_ids: list[int]) -> dict[int, list[ProjectMember]]:
+        raise NotImplementedError
+
+    @abstractmethod
     async def is_member(self, project_id: int, user_id: int) -> bool:
         raise NotImplementedError

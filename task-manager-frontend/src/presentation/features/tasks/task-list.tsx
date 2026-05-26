@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/presentation/components/ui/button";
 import {
   Dialog,
@@ -10,7 +10,6 @@ import {
 } from "@/presentation/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/presentation/components/ui/alert-dialog";
 import { Skeleton } from "@/presentation/components/ui/skeleton";
-import { Badge } from "@/presentation/components/ui/badge";
 import { useFilteredTasks, useCreateTask, useUpdateTask, useDeleteTask, useChangeTaskStatus, useChangeTaskPriority } from "@/application/hooks/use-tasks";
 import { useProjectMembers } from "@/application/hooks/use-members";
 import { useAuthStore } from "@/application/store/auth.store";
@@ -68,20 +67,16 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
     });
   };
 
-  const canEdit = useMemo(() => {
-    return (assignedUserId: number | null) => {
-      if (isOwner) return true;
-      return assignedUserId === userId;
-    };
-  }, [isOwner, userId]);
+  const canEdit = (assignedUserId: number | null) => {
+    if (isOwner) return true;
+    return assignedUserId === userId;
+  };
 
-  const getMemberName = useMemo(() => {
-    return (assignedUserId: number | null) => {
-      if (!assignedUserId) return "";
-      const member = members.find((m) => m.user_id === assignedUserId);
-      return member ? member.full_name || member.email : `Usuario #${assignedUserId}`;
-    };
-  }, [members]);
+  const getMemberName = (assignedUserId: number | null) => {
+    if (!assignedUserId) return "";
+    const member = members.find((m) => m.user_id === assignedUserId);
+    return member ? member.full_name || member.email : `Usuario #${assignedUserId}`;
+  };
 
   const clearFilters = () => {
     setStatusFilter("all");
