@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { TaskItem } from "@/presentation/features/tasks/task-item";
 import { TaskStatus, TaskPriority, type Task } from "@/domain/types";
 
@@ -21,7 +22,9 @@ function renderTaskItem(overrides: Partial<{
   isArchived: boolean;
 }> = {}) {
   const task = { ...baseTask, ...overrides.task };
-  return render(
+  const onEdit = vi.fn();
+  const onDelete = vi.fn();
+  const utils = render(
     <TaskItem
       task={task}
       memberName={overrides.memberName ?? "Alice"}
@@ -29,10 +32,11 @@ function renderTaskItem(overrides: Partial<{
       isArchived={overrides.isArchived ?? false}
       onChangeStatus={vi.fn()}
       onChangePriority={vi.fn()}
-      onEdit={vi.fn()}
-      onDelete={vi.fn()}
+      onEdit={onEdit}
+      onDelete={onDelete}
     />,
   );
+  return { ...utils, onEdit, onDelete };
 }
 
 describe("TaskItem", () => {
@@ -52,22 +56,35 @@ describe("TaskItem", () => {
   });
 
   it("shows edit and delete buttons when canEdit and not archived", () => {
-    const { container } = renderTaskItem({ canEdit: true, isArchived: false });
-    // Edit button contains lucide-square-pen icon, delete has lucide-trash2
-    expect(container.querySelector(".lucide-square-pen")).toBeInTheDocument();
-    expect(container.querySelector(".lucide-trash2")).toBeInTheDocument();
+    renderTaskItem({ canEdit: true, isArchived: false });
+    expect(screen.getByRole("button", { name: /editar tarea/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /eliminar tarea/i })).toBeInTheDocument();
   });
 
   it("hides edit/delete buttons when archived", () => {
-    const { container } = renderTaskItem({ canEdit: true, isArchived: true });
-    expect(container.querySelector(".lucide-square-pen")).not.toBeInTheDocument();
-    expect(container.querySelector(".lucide-trash2")).not.toBeInTheDocument();
+    renderTaskItem({ canEdit: true, isArchived: true });
+    expect(screen.queryByRole("button", { name: /editar tarea/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /eliminar tarea/i })).not.toBeInTheDocument();
   });
 
   it("hides edit/delete buttons when user cannot edit", () => {
-    const { container } = renderTaskItem({ canEdit: false, isArchived: false });
-    expect(container.querySelector(".lucide-square-pen")).not.toBeInTheDocument();
-    expect(container.querySelector(".lucide-trash2")).not.toBeInTheDocument();
+    renderTaskItem({ canEdit: false, isArchived: false });
+    expect(screen.queryByRole("button", { name: /editar tarea/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /eliminar tarea/i })).not.toBeInTheDocument();
+  });
+
+  it("calls onEdit when edit button is clicked", async () => {
+    const { onEdit } = renderTaskItem({ canEdit: true, isArchived: false });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /editar tarea/i }));
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ id: 1, name: "Test Task" }));
+  });
+
+  it("calls onDelete when delete button is clicked", async () => {
+    const { onDelete } = renderTaskItem({ canEdit: true, isArchived: false });
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /eliminar tarea/i }));
+    expect(onDelete).toHaveBeenCalledWith(1);
   });
 
   it("applies opacity class when archived", () => {

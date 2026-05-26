@@ -75,7 +75,7 @@ export function TaskItem({
       </div>
       {!isArchived && canEdit && (
         <div className="flex gap-1 shrink-0">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(task)}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(task)} aria-label="Editar tarea">
             <Edit className="h-4 w-4" />
           </Button>
           <Button
@@ -83,6 +83,7 @@ export function TaskItem({
             size="icon"
             className="h-8 w-8"
             onClick={() => onDelete(task.id)}
+            aria-label="Eliminar tarea"
           >
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { TaskFilters } from "@/presentation/features/tasks/task-filters";
 import { TaskStatus, TaskPriority } from "@/domain/types";
 
@@ -8,17 +9,20 @@ function renderFilters(overrides: {
   priorityFilter?: TaskPriority | "all";
   canCreate?: boolean;
 } = {}) {
-  return render(
+  const onOpenCreate = vi.fn();
+  const onClear = vi.fn();
+  const utils = render(
     <TaskFilters
       statusFilter={overrides.statusFilter ?? "all"}
       priorityFilter={overrides.priorityFilter ?? "all"}
       onStatusFilterChange={vi.fn()}
       onPriorityFilterChange={vi.fn()}
-      onClear={vi.fn()}
+      onClear={onClear}
       canCreate={overrides.canCreate ?? true}
-      onOpenCreate={vi.fn()}
+      onOpenCreate={onOpenCreate}
     />,
   );
+  return { ...utils, onOpenCreate, onClear };
 }
 
 describe("TaskFilters", () => {
@@ -51,5 +55,19 @@ describe("TaskFilters", () => {
   it("shows 'Limpiar' when priority filter is active", () => {
     renderFilters({ priorityFilter: TaskPriority.HIGH });
     expect(screen.getByText("Limpiar")).toBeInTheDocument();
+  });
+
+  it("calls onOpenCreate when 'Agregar Tarea' is clicked", async () => {
+    const { onOpenCreate } = renderFilters({ canCreate: true });
+    const user = userEvent.setup();
+    await user.click(screen.getByText("Agregar Tarea"));
+    expect(onOpenCreate).toHaveBeenCalledOnce();
+  });
+
+  it("calls onClear when 'Limpiar' is clicked", async () => {
+    const { onClear } = renderFilters({ statusFilter: TaskStatus.PENDING });
+    const user = userEvent.setup();
+    await user.click(screen.getByText("Limpiar"));
+    expect(onClear).toHaveBeenCalledOnce();
   });
 });

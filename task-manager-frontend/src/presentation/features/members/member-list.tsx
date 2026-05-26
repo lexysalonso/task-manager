@@ -199,6 +199,7 @@ export function MemberList({ projectId, isOwner, ownerId }: MemberListProps) {
                                             size="icon"
                                             className="h-8 w-8 text-destructive"
                                             onClick={() => setRemoveId(member.user_id)}
+                                            aria-label={`Eliminar a ${member.full_name || member.email}`}
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
