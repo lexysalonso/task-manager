@@ -9,6 +9,7 @@ from src.infrastructure.db.repositories import (
     SqlAlchemyTaskRepository,
 )
 from src.infrastructure.security.password_service import PasswordService
+from src.infrastructure.security.jwt_service import JwtService
 from src.domain.ports.user_repository import UserRepository
 from src.domain.ports.project_repository import ProjectRepository
 from src.domain.ports.task_repository import TaskRepository

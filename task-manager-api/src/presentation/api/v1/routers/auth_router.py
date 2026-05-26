@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, status
 
 from src.application.use_cases.auth import RegisterUserUseCase, LoginUserUseCase
 from src.application.dtos.auth_dtos import RegisterInput, LoginInput
-from src.infrastructure.security.jwt_service import JwtService
 from src.presentation.api.v1.schemas.auth_schemas import (
     RegisterRequest,
     LoginRequest,
@@ -14,6 +13,7 @@ from src.presentation.api.v1.dependencies import (
     get_login_use_case,
     get_jwt_service,
 )
+from src.domain.ports.token_service import TokenService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def register(
     body: RegisterRequest,
     use_case: RegisterUserUseCase = Depends(get_register_use_case),
-    jwt_service: JwtService = Depends(get_jwt_service),
+    jwt_service: TokenService = Depends(get_jwt_service),
 ) -> AuthResponse:
     output = await use_case.execute(
         RegisterInput(email=body.email, full_name=body.full_name, password=body.password)

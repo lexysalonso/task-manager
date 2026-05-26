@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Button } from "@/presentation/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,13 +12,11 @@ import { Skeleton } from "@/presentation/components/ui/skeleton";
 import { useFilteredTasks, useCreateTask, useUpdateTask, useDeleteTask, useChangeTaskStatus, useChangeTaskPriority } from "@/application/hooks/use-tasks";
 import { useProjectMembers } from "@/application/hooks/use-members";
 import { useAuthStore } from "@/application/store/auth.store";
-import { TaskStatusBadge } from "./task-status-badge";
-import { TaskPriorityBadge } from "./task-priority-badge";
 import { TaskForm } from "./task-form";
+import { TaskFilters } from "./task-filters";
+import { TaskItem } from "./task-item";
 import { TaskStatus, TaskPriority, type Task } from "@/domain/types";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/components/ui/select";
-import { Plus, Trash2, Edit, ClipboardList } from "lucide-react";
-import { statusLabels, priorityLabels } from "@/lib/constants";
+import { ClipboardList } from "lucide-react";
 
 interface TaskListProps {
   projectId: number;
@@ -67,20 +64,15 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
     });
   };
 
-  const canEdit = (assignedUserId: number | null) => {
-    if (isOwner) return true;
-    return assignedUserId === userId;
-  };
-
   const getMemberName = (assignedUserId: number | null) => {
     if (!assignedUserId) return "";
     const member = members.find((m) => m.user_id === assignedUserId);
     return member ? member.full_name || member.email : `Usuario #${assignedUserId}`;
   };
 
-  const clearFilters = () => {
-    setStatusFilter("all");
-    setPriorityFilter("all");
+  const canEditTask = (task: Task) => {
+    if (isOwner) return true;
+    return task.assigned_user_id === userId;
   };
 
   if (isLoading) {
@@ -103,72 +95,24 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex gap-2">
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as TaskStatus | "all")}>
-            <SelectTrigger className="h-9 w-[170px]">
-              <SelectValue placeholder="Todos los estados" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los estados</SelectItem>
-              {Object.entries(statusLabels).map(([value, label]) => (
-                <SelectItem key={value} value={value}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as TaskPriority | "all")}>
-            <SelectTrigger className="h-9 w-[180px]">
-              <SelectValue placeholder="Todas las prioridades" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las prioridades</SelectItem>
-              {Object.entries(priorityLabels).map(([value, label]) => (
-                <SelectItem key={value} value={value}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {(statusFilter || priorityFilter) && (
-            <Button variant="ghost" size="sm" onClick={clearFilters}>Limpiar</Button>
-          )}
-        </div>
-        {!isArchived && (
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="mr-2 h-4 w-4" /> Agregar Tarea
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Crear Tarea</DialogTitle>
-                <DialogDescription>
-                  Completa los campos para crear una nueva tarea.
-                </DialogDescription>
-              </DialogHeader>
-              <TaskForm
-                members={members}
-                onSubmit={handleCreate}
-                isPending={createMutation.isPending}
-                mode="create"
-                onCancel={() => setCreateOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
-
-      {!isArchived && tasks.length > 0 && (
-        <p className="text-xs text-muted-foreground">Consejo: Haz clic en la insignia de estado o prioridad para cambiarla</p>
-      )}
+      <TaskFilters
+        statusFilter={statusFilter}
+        priorityFilter={priorityFilter}
+        onStatusFilterChange={setStatusFilter}
+        onPriorityFilterChange={setPriorityFilter}
+        onClear={() => { setStatusFilter("all"); setPriorityFilter("all"); }}
+        canCreate={!isArchived}
+        onOpenCreate={() => setCreateOpen(true)}
+      />
 
       {tasks.length === 0 ? (
         <div className="text-center py-12 border rounded-lg">
           <ClipboardList className="mx-auto h-12 w-12 text-muted-foreground" />
           <h3 className="mt-4 text-lg font-semibold">
-            {statusFilter || priorityFilter ? "Sin tareas que coincidan" : "Sin tareas aún"}
+            {statusFilter !== "all" || priorityFilter !== "all" ? "Sin tareas que coincidan" : "Sin tareas aún"}
           </h3>
           <p className="text-muted-foreground mt-2">
-            {statusFilter || priorityFilter
+            {statusFilter !== "all" || priorityFilter !== "all"
               ? "Prueba ajustando los filtros"
               : "Crea tu primera tarea para comenzar."}
           </p>
@@ -176,86 +120,45 @@ export function TaskList({ projectId, isOwner, isArchived }: TaskListProps) {
       ) : (
         <div className="space-y-2">
           {tasks.map((task) => (
-            <div
+            <TaskItem
               key={task.id}
-              className={`flex items-center justify-between gap-4 rounded-lg border p-4 ${isArchived ? "opacity-75" : ""}`}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-medium truncate">{task.name}</span>
-                  <TaskStatusBadge status={task.status} />
-                  <TaskPriorityBadge priority={task.priority} />
-                </div>
-                {task.assigned_user_id && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Asignada a {getMemberName(task.assigned_user_id)}
-                  </p>
-                )}
-                {!isArchived && canEdit(task.assigned_user_id) && (
-                  <div className="flex gap-2 mt-2">
-                    <Select
-                      value={task.status}
-                      onValueChange={(v) =>
-                        changeStatusMutation.mutate({
-                          taskId: task.id,
-                          payload: { status: v as TaskStatus },
-                        })
-                      }
-                    >
-                      <SelectTrigger className="h-7 text-xs w-[130px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(statusLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value} className="text-xs">{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={task.priority}
-                      onValueChange={(v) =>
-                        changePriorityMutation.mutate({
-                          taskId: task.id,
-                          payload: { priority: v as TaskPriority },
-                        })
-                      }
-                    >
-                      <SelectTrigger className="h-7 text-xs w-[110px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(priorityLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value} className="text-xs">{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-              {!isArchived && canEdit(task.assigned_user_id) && (
-                <div className="flex gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setEditTask(task)}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setDeleteTaskId(task.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              )}
-            </div>
+              task={task}
+              memberName={getMemberName(task.assigned_user_id)}
+              canEdit={canEditTask(task)}
+              isArchived={isArchived}
+              onChangeStatus={(taskId, status) =>
+                changeStatusMutation.mutate({ taskId, payload: { status } })
+              }
+              onChangePriority={(taskId, priority) =>
+                changePriorityMutation.mutate({ taskId, payload: { priority } })
+              }
+              onEdit={setEditTask}
+              onDelete={(taskId) => setDeleteTaskId(taskId)}
+            />
           ))}
         </div>
       )}
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogTrigger asChild>
+          <span />
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Crear Tarea</DialogTitle>
+            <DialogDescription>
+              Completa los campos para crear una nueva tarea.
+            </DialogDescription>
+          </DialogHeader>
+          <TaskForm
+            members={members}
+            onSubmit={handleCreate}
+            isPending={createMutation.isPending}
+            mode="create"
+            onCancel={() => setCreateOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={editTask !== null} onOpenChange={(open) => !open && setEditTask(null)}>
         <DialogContent>
