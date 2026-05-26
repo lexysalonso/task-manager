@@ -48,11 +48,13 @@ class SqlAlchemyTaskRepository(TaskRepository):
             updated_at=model.updated_at,
         )
 
-    async def list_by_project(self, project_id: int) -> list[Task]:
+    async def list_by_project(self, project_id: int, limit: int = 50, offset: int = 0) -> list[Task]:
         result = await self._session.execute(
             select(TaskModel)
             .where(TaskModel.project_id == project_id)
             .order_by(TaskModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
         )
         models = result.scalars().all()
         return [
@@ -69,6 +71,14 @@ class SqlAlchemyTaskRepository(TaskRepository):
             for m in models
         ]
 
+    async def count_by_project(self, project_id: int) -> int:
+        result = await self._session.execute(
+            select(TaskModel)
+            .where(TaskModel.project_id == project_id)
+            .with_only_columns(TaskModel.id)
+        )
+        return len(result.all())
+
     async def update(self, task: Task) -> Task:
         model = await self._session.get(TaskModel, task.id)
         if not model:
@@ -79,6 +89,7 @@ class SqlAlchemyTaskRepository(TaskRepository):
         model.assigned_user_id = task.assigned_user_id
         model.updated_at = task.updated_at
         await self._session.flush()
+        await self._session.refresh(model)
         return Task(
             id=model.id,
             name=model.name,

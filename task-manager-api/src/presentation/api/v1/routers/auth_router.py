@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 
 from src.application.use_cases.auth import RegisterUserUseCase, LoginUserUseCase
 from src.application.dtos.auth_dtos import RegisterInput, LoginInput
@@ -14,6 +14,7 @@ from src.presentation.api.v1.dependencies import (
     get_jwt_service,
 )
 from src.domain.ports.token_service import TokenService
+from src.infrastructure.rate_limiter import limiter
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -25,7 +26,9 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
     summary="Register a new user",
     description="Creates a new user account and returns a JWT access token",
 )
+@limiter.limit("5/minute")
 async def register(
+    request: Request,
     body: RegisterRequest,
     use_case: RegisterUserUseCase = Depends(get_register_use_case),
     jwt_service: TokenService = Depends(get_jwt_service),
@@ -46,7 +49,9 @@ async def register(
     summary="Authenticate user",
     description="Validates credentials and returns a JWT access token",
 )
+@limiter.limit("10/minute")
 async def login(
+    request: Request,
     body: LoginRequest,
     use_case: LoginUserUseCase = Depends(get_login_use_case),
 ) -> AuthResponse:

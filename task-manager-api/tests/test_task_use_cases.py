@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import pytest
 
 from src.application.use_cases.tasks.create_task import CreateTaskUseCase
-from src.application.use_cases.tasks.list_tasks import ListTasksUseCase
+from src.application.use_cases.tasks.list_tasks import ListTasksUseCase, ListTasksInput
 from src.application.use_cases.tasks.update_task import UpdateTaskUseCase
 from src.application.use_cases.tasks.delete_task import DeleteTaskUseCase
 from src.application.use_cases.tasks.change_status import ChangeTaskStatusUseCase
@@ -149,13 +149,39 @@ async def test_list_tasks_success() -> None:
         _make_task(id=1, name="Task A", assigned_user_id=1),
         _make_task(id=2, name="Task B", assigned_user_id=2),
     ]
+    task_repo.count_by_project.return_value = 2
 
     use_case = ListTasksUseCase(project_repo, task_repo)
-    result = await use_case.execute(project_id=1, user_id=1)
+    result = await use_case.execute(
+        ListTasksInput(project_id=1, user_id=1)
+    )
 
     assert len(result.tasks) == 2
     assert result.tasks[0].name == "Task A"
     assert result.tasks[1].assigned_user_id == 2
+    assert result.total == 2
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_success_with_pagination() -> None:
+    project_repo = AsyncMock()
+    project_repo.get_by_id.return_value = _make_project()
+    project_repo.is_member.return_value = True
+
+    task_repo = AsyncMock()
+    task_repo.list_by_project.return_value = [_make_task(id=1, name="Task A")]
+    task_repo.count_by_project.return_value = 10
+
+    use_case = ListTasksUseCase(project_repo, task_repo)
+    result = await use_case.execute(
+        ListTasksInput(project_id=1, user_id=1, limit=5, offset=0)
+    )
+
+    assert len(result.tasks) == 1
+    assert result.total == 10
+    assert result.limit == 5
+    assert result.offset == 0
+    task_repo.list_by_project.assert_awaited_once_with(1, limit=5, offset=0)
 
 
 @pytest.mark.asyncio
@@ -165,7 +191,7 @@ async def test_list_tasks_project_not_found() -> None:
 
     use_case = ListTasksUseCase(project_repo, AsyncMock())
     with pytest.raises(ProjectNotFoundError):
-        await use_case.execute(project_id=999, user_id=1)
+        await use_case.execute(ListTasksInput(project_id=999, user_id=1))
 
 
 @pytest.mark.asyncio
@@ -176,7 +202,7 @@ async def test_list_tasks_not_member() -> None:
 
     use_case = ListTasksUseCase(project_repo, AsyncMock())
     with pytest.raises(NotProjectMemberError):
-        await use_case.execute(project_id=1, user_id=2)
+        await use_case.execute(ListTasksInput(project_id=1, user_id=2))
 
 
 # ── Update ─────────────────────────────────────────

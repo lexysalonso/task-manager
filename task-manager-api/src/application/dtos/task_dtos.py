@@ -26,6 +26,9 @@ class TaskOutput:
 @dataclass
 class TaskListOutput:
     tasks: list[TaskOutput]
+    total: int = 0
+    limit: int = 50
+    offset: int = 0
 
 
 @dataclass

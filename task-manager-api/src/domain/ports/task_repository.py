@@ -13,7 +13,11 @@ class TaskRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def list_by_project(self, project_id: int) -> list[Task]:
+    async def list_by_project(self, project_id: int, limit: int = 50, offset: int = 0) -> list[Task]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def count_by_project(self, project_id: int) -> int:
         raise NotImplementedError
 
     @abstractmethod

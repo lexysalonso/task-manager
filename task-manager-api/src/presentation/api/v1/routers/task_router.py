@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from src.presentation.api.v1.schemas.task_schemas import (
     CreateTaskRequest,
     UpdateTaskRequest,
     ChangeStatusRequest,
     ChangePriorityRequest,
+    PaginationMeta,
     TaskResponse,
     TaskListResponse,
 )
@@ -20,6 +21,7 @@ from src.presentation.api.v1.dependencies import (
 from src.application.use_cases.tasks import (
     CreateTaskUseCase,
     ListTasksUseCase,
+    ListTasksInput,
     UpdateTaskUseCase,
     DeleteTaskUseCase,
     ChangeTaskStatusUseCase,
@@ -39,14 +41,18 @@ router = APIRouter(prefix="/projects/{project_id}/tasks", tags=["Tasks"])
     "",
     response_model=TaskListResponse,
     summary="List tasks",
-    description="Returns all tasks in a project. Members only.",
+    description="Returns paginated tasks in a project. Members only.",
 )
 async def list_tasks(
     project_id: int,
+    limit: int = Query(50, ge=1, le=200, description="Max items per page"),
+    offset: int = Query(0, ge=0, description="Number of items to skip"),
     user_id: int = Depends(get_current_user_id),
     use_case: ListTasksUseCase = Depends(get_list_tasks_use_case),
 ) -> TaskListResponse:
-    result = await use_case.execute(project_id, user_id)
+    result = await use_case.execute(
+        ListTasksInput(project_id=project_id, user_id=user_id, limit=limit, offset=offset)
+    )
     return TaskListResponse(
         tasks=[
             TaskResponse(
@@ -60,7 +66,8 @@ async def list_tasks(
                 updated_at=t.updated_at,
             )
             for t in result.tasks
-        ]
+        ],
+        pagination=PaginationMeta(total=result.total, limit=result.limit, offset=result.offset),
     )
 
 

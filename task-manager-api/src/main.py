@@ -3,9 +3,13 @@ import logging
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from src.config import settings
 from src.domain.exceptions import DomainException
+from src.infrastructure.rate_limiter import limiter
 from src.presentation.api.v1.routers import (
     auth_router,
     user_router,
@@ -23,6 +27,10 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 origins = [o.strip() for o in settings.allowed_origins.split(",") if o.strip()]
 app.add_middleware(

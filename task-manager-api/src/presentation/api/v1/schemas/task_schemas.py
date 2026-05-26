@@ -50,5 +50,12 @@ class TaskResponse(BaseModel):
     updated_at: datetime
 
 
+class PaginationMeta(BaseModel):
+    total: int
+    limit: int
+    offset: int
+
+
 class TaskListResponse(BaseModel):
     tasks: list[TaskResponse]
+    pagination: PaginationMeta
