@@ -2,7 +2,6 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TaskForm } from "@/presentation/features/tasks/task-form";
-import { TaskPriority } from "@/domain/types";
 
 function renderForm(overrides: {
   mode?: "create" | "edit";
